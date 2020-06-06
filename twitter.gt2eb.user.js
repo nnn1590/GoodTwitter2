@@ -730,6 +730,7 @@
       let bgc = m.target[m.attributeName]["background-color"]
       if (m.oldValue && bgc != "" && bgc != m.oldValue.match(/background-color: (rgb\([\d, ]+\));/)[1]) {
         GM_setValue("opt_display_bgColor", bgc)
+        console.log(`New background-color: ${bgc}`)
         updateCSS()
       }
     })
