@@ -6,6 +6,8 @@
 // @license       MIT
 // @match         https://twitter.com/*
 // @exclude       https://twitter.com/i/cards/*
+// @exclude       https://twitter.com/i/moments/edit/*
+// @exclude       https://twitter.com/i/directory/*
 // @grant         GM_deleteValue
 // @grant         GM_getResourceText
 // @grant         GM_getResourceURL
