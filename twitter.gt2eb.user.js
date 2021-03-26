@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name          GoodTwitter 2 - Electric Boogaloo
+// @name          GoodTwitter 2 - Electric Boogaloo (FORK)
 // @version       0.0.29
 // @description   A try to make Twitter look good again
 // @author        schwarzkatz
@@ -14,14 +14,14 @@
 // @grant         GM_info
 // @grant         GM_xmlhttpRequest
 // @connect       api.twitter.com
-// @resource      css https://github.com/Bl4Cc4t/GoodTwitter2/raw/master/twitter.gt2eb.style.css
+// @resource      css https://github.com/nnn1590/GoodTwitter2/raw/nnn1590-dev-1/twitter.gt2eb.style.css
 // @resource      emojiRegex https://github.com/mathiasbynens/emoji-regex/raw/main/es2015/index.js
-// @require       https://github.com/Bl4Cc4t/GoodTwitter2/raw/master/twitter.gt2eb.i18n.js
+// @require       https://github.com/nnn1590/GoodTwitter2/raw/nnn1590-dev-1/twitter.gt2eb.i18n.js
 // @require       https://code.jquery.com/jquery-3.5.1.min.js
 // @require       https://gist.github.com/raw/2625891/waitForKeyElements.js
-// @require       https://github.com/Bl4Cc4t/GoodTwitter2/raw/master/twitter.gt2eb.polyfills.js
-// @updateURL     https://github.com/Bl4Cc4t/GoodTwitter2/raw/master/twitter.gt2eb.user.js
-// @downloadURL   https://github.com/Bl4Cc4t/GoodTwitter2/raw/master/twitter.gt2eb.user.js
+// @require       https://github.com/nnn1590/GoodTwitter2/raw/nnn1590-dev-1/twitter.gt2eb.polyfills.js
+// @updateURL     https://github.com/nnn1590/GoodTwitter2/raw/nnn1590-dev-1/twitter.gt2eb.user.js
+// @downloadURL   https://github.com/nnn1590/GoodTwitter2/raw/nnn1590-dev-1/twitter.gt2eb.user.js
 // ==/UserScript==
 
 (function($, waitForKeyElements) {
@@ -777,7 +777,7 @@
         <div class="gt2-sidebar-notice-content">
           ${getSvg("tick")} ${getLocStr("updatedInfo").replace("$version$", `v${v}`)}<br />
           <a
-            href="https://github.com/Bl4Cc4t/GoodTwitter2/blob/master/doc/changelog.md#${v.replace(/\./g, "")}"
+            href="https://github.com/nnn1590/GoodTwitter2/blob/nnn1590-dev-1/doc/changelog.md#${v.replace(/\./g, "")}"
             target="_blank">
             ${getLocStr("updatedInfoChangelog")}
           </a>
