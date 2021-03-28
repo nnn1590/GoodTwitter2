@@ -237,6 +237,25 @@
   }
 
 
+  function requestUserAlt(screenName, cb) {
+    GM_xmlhttpRequest({
+      method: "GET",
+      url: getRequestURL(`https://api.twitter.com/1.1/users/show.json`, {
+        screen_name: screenName,
+        include_entities: false
+      }),
+      headers: getRequestHeaders(),
+      onload: function(res) {
+        if (res.status == "200") {
+          cb(JSON.parse(res.response))
+        } else {
+          console.warn(res)
+        }
+      }
+    })
+  }
+
+
   function blockUser(user_id, block, cb) {
     GM_xmlhttpRequest({
       method: "POST",
@@ -2280,6 +2299,14 @@
         $("body").addClass("gt2-page-profile")
         $("[class^=gt2-blocked-profile-]").remove()
         $(".gt2-tco-expanded").removeClass("gt2-tco-expanded")
+        requestUserAlt(getPath().split("/")[0].split("?")[0].split("#")[0], res => {
+          var userColorHEX = res.profile_link_color
+          var userColor = "rgb(" + parseInt(userColorHEX.slice(0, 2), 16) + ", " + parseInt(userColorHEX.slice(2, 4), 16) + ", " + parseInt(userColorHEX.slice(4, 6), 16) + ")"
+          if (userColor != GM_getValue("opt_display_userColor")) {
+            GM_setValue("opt_display_userColor", userColor)
+            updateCSS()
+          }
+        })
         if (GM_getValue("opt_gt2").legacyProfile) {
           if ($("body").attr("data-gt2-prev-path") != path()) {
             $("a[href$='/photo'] img").data("alreadyFound", false)
