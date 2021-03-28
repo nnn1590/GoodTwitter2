@@ -1833,13 +1833,13 @@
 
 
   // user color
-  waitForKeyElements(`h2 > a[href="/i/keyboard_shortcuts"]`, e => {
+  /*waitForKeyElements(`h2 > a[href="/i/keyboard_shortcuts"]`, e => {
     let userColor = $(e).css("color")
     if (userColor != GM_getValue("opt_display_userColor")) {
       GM_setValue("opt_display_userColor", userColor)
       updateCSS()
     }
-  })
+  })*/
 
   // background color
   new MutationObserver(mut => {
@@ -2317,6 +2317,16 @@
         $("body").removeClass("gt2-page-profile")
         $(".gt2-legacy-profile-banner, .gt2-legacy-profile-nav").remove()
         $(".gt2-legacy-profile-info").remove()
+        if (isLoggedIn()) {
+          requestUserAlt(getInfo().screenName, res => {
+            var userColorHEX = res.profile_link_color
+            var userColor = "rgb(" + parseInt(userColorHEX.slice(0, 2), 16) + ", " + parseInt(userColorHEX.slice(2, 4), 16) + ", " + parseInt(userColorHEX.slice(4, 6), 16) + ")"
+            if (userColor != GM_getValue("opt_display_userColor")) {
+              GM_setValue("opt_display_userColor", userColor)
+              updateCSS()
+            }
+          })
+        }
       }
     }
 
