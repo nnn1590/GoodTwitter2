@@ -2299,14 +2299,16 @@
         $("body").addClass("gt2-page-profile")
         $("[class^=gt2-blocked-profile-]").remove()
         $(".gt2-tco-expanded").removeClass("gt2-tco-expanded")
-        requestUserAlt(getPath().split("/")[0].split("?")[0].split("#")[0], res => {
-          var userColorHEX = res.profile_link_color
-          var userColor = "rgb(" + parseInt(userColorHEX.slice(0, 2), 16) + ", " + parseInt(userColorHEX.slice(2, 4), 16) + ", " + parseInt(userColorHEX.slice(4, 6), 16) + ")"
-          if (userColor != GM_getValue("opt_display_userColor")) {
-            GM_setValue("opt_display_userColor", userColor)
-            updateCSS()
-          }
-        })
+        if (changeType=="init" || !onSubPage(null, ["followers", "followers_you_follow", "following", "lists", "moments", "status"])) {
+          requestUserAlt(getPath().split("/")[0].split("?")[0].split("#")[0], res => {
+            var userColorHEX = res.profile_link_color
+            var userColor = "rgb(" + parseInt(userColorHEX.slice(0, 2), 16) + ", " + parseInt(userColorHEX.slice(2, 4), 16) + ", " + parseInt(userColorHEX.slice(4, 6), 16) + ")"
+            if (userColor != GM_getValue("opt_display_userColor")) {
+              GM_setValue("opt_display_userColor", userColor)
+              updateCSS()
+            }
+          })
+        }
         if (GM_getValue("opt_gt2").legacyProfile) {
           if ($("body").attr("data-gt2-prev-path") != path()) {
             $("a[href$='/photo'] img").data("alreadyFound", false)
@@ -2318,14 +2320,21 @@
         $(".gt2-legacy-profile-banner, .gt2-legacy-profile-nav").remove()
         $(".gt2-legacy-profile-info").remove()
         if (isLoggedIn()) {
-          requestUserAlt(getInfo().screenName, res => {
-            var userColorHEX = res.profile_link_color
-            var userColor = "rgb(" + parseInt(userColorHEX.slice(0, 2), 16) + ", " + parseInt(userColorHEX.slice(2, 4), 16) + ", " + parseInt(userColorHEX.slice(4, 6), 16) + ")"
-            if (userColor != GM_getValue("opt_display_userColor")) {
-              GM_setValue("opt_display_userColor", userColor)
-              updateCSS()
-            }
-          })
+          let screenName = getInfo().screenName
+          let screenNameFromPath = getPath().split("/")[0].split("?")[0].split("#")[0]
+          if ((changeType=="init" && onSubPage(null, ["followers", "followers_you_follow", "following", "lists", "moments", "status"])) && screenNameFromPath != "i") {
+            screenName = screenNameFromPath
+          }
+          if (changeType=="init" || !onSubPage(null, ["followers", "followers_you_follow", "following", "lists", "moments", "status"])) {
+            requestUserAlt(screenName, res => {
+              var userColorHEX = res.profile_link_color
+              var userColor = "rgb(" + parseInt(userColorHEX.slice(0, 2), 16) + ", " + parseInt(userColorHEX.slice(2, 4), 16) + ", " + parseInt(userColorHEX.slice(4, 6), 16) + ")"
+              if (userColor != GM_getValue("opt_display_userColor")) {
+                GM_setValue("opt_display_userColor", userColor)
+                updateCSS()
+              }
+            })
+          }
         }
       }
     }
