@@ -44,6 +44,8 @@
   "fontOverrideDesc": "Set a custom font to override the default one. This works only if you have the font installed.",
   "colorOverride": "Use Custom Color",
   "colorOverrideDesc": "Set a custom color to override the default one.",
+  "colorOverrideUseLegacy": "Use Legacy Theme Color",
+  "colorOverrideUseLegacyDesc": "Set the custom color to the legacy account-specific theme color (profile_link_color).<br/>While this setting is enabled, the custom color settings will be changed to the legacy theme colors.",
   "forceLatest": "Force Latest",
   "forceLatestDesc": "Enabling the latest tweets mode is not permanent anymore. With this setting active, the site automatically switches back to the latest tweets mode.",
   "hideMessageBox": "Hide Message Box",

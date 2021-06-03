@@ -44,6 +44,8 @@
   "fontOverrideDesc": "デフォルトのフォントを設定したカスタムフォントに変更します。この機能は設定したフォントがインストールされている場合にのみ機能します。",
   "colorOverride": "*NEW* Use Custom Color",
   "colorOverrideDesc": "*NEW* Set a custom color to override the default one.",
+  "colorOverrideUseLegacy": "レガシーテーマカラーを使用する",
+  "colorOverrideUseLegacyDesc": "従来のアカウント固有のテーマカラー(profile_link_color)をカスタムカラーとして使用します。<br/>この設定が有効な間は、カスタムカラー設定は従来のテーマカラーで変更されます。",
   "forceLatest": "最新ツイート表示を強制する",
   "forceLatestDesc": "本来、最新ツイート表示モードを永続的に表示することはできません。この設定を有効にすると自動かつ強制的に最新ツイート表示モードに切り替えることができます。",
   "hideMessageBox": "メッセージボックスを非表示にする",

@@ -404,6 +404,7 @@
     fontOverrideValue:        "Arial",
     colorOverride:            false,
     colorOverrideValue:       "85, 102, 68",
+    colorOverrideUseLegacy:   false,
     hideMessageBox:           true,
 
     updateNotifications:      true,
@@ -553,6 +554,7 @@
             </div>
           `)}
           ${getSettingTogglePart("colorOverride", `<div class="gt2-pickr"></div>`)}
+          ${getSettingTogglePart("colorOverrideUseLegacy")}
           ${getSettingTogglePart("hideMessageBox")}
           <div class="gt2-settings-seperator"></div>
 
@@ -658,6 +660,10 @@
     // hide color input if colorOverride is disabled
     $(".gt2-color-override-pickr")
     [GM_getValue("opt_gt2").colorOverride ? "removeClass" : "addClass"]("gt2-hidden")
+
+    // disable lgecay theme color toggle if colorOverride is disabled
+    $("[data-setting-name=colorOverrideUseLegacy]")
+    [GM_getValue("opt_gt2").colorOverride ? "removeClass" : "addClass"]("gt2-disabled")
 
     // hide follow suggestions
     $("[data-setting-name=hideFollowSuggestionsSel]")
@@ -2413,14 +2419,21 @@
         $("[class^=gt2-blocked-profile-]").remove()
         $(".gt2-tco-expanded").removeClass("gt2-tco-expanded")
         if (changeType=="init" || !onSubPage(null, ["followers", "followers_you_follow", "following", "lists", "moments", "status"])) {
-          requestUserAlt(getPath().split("/")[0].split("?")[0].split("#")[0], res => {
-            var userColorHEX = res.profile_link_color
-            var userColor = "rgb(" + parseInt(userColorHEX.slice(0, 2), 16) + ", " + parseInt(userColorHEX.slice(2, 4), 16) + ", " + parseInt(userColorHEX.slice(4, 6), 16) + ")"
-            if (userColor != GM_getValue("opt_display_userColor")) {
-              GM_setValue("opt_display_userColor", userColor)
-              updateCSS()
-            }
-          })
+          if (GM_getValue("opt_gt2").colorOverrideUseLegacy) {
+            requestUserAlt(getPath().split("/")[0].split("?")[0].split("#")[0], res => {
+              var userColorHEX = res.profile_link_color
+              //var userColor = "rgb(" + parseInt(userColorHEX.slice(0, 2), 16) + ", " + parseInt(userColorHEX.slice(2, 4), 16) + ", " + parseInt(userColorHEX.slice(4, 6), 16) + ")"
+              var userColor = parseInt(userColorHEX.slice(0, 2), 16) + ", " + parseInt(userColorHEX.slice(2, 4), 16) + ", " + parseInt(userColorHEX.slice(4, 6), 16)
+              /*if (userColor != GM_getValue("opt_display_userColor")) {
+                GM_setValue("opt_display_userColor", userColor)
+                updateCSS()
+              }*/
+              if (userColor != GM_getValue("opt_gt2").colorOverrideValue) {
+                GM_setValue("opt_gt2", Object.assign(GM_getValue("opt_gt2"), { colorOverrideValue: userColor}))
+                document.documentElement.style.setProperty("--color-override", userColor)
+              }
+            })
+          }
         }
         if (GM_getValue("opt_gt2").legacyProfile) {
           if ($("body").attr("data-gt2-prev-path") != path()) {
@@ -2451,14 +2464,21 @@
             screenName = screenNameFromPath
           }
           if (changeType=="init" || !onSubPage(null, ["followers", "followers_you_follow", "following", "lists", "moments", "status"])) {
-            requestUserAlt(screenName, res => {
-              var userColorHEX = res.profile_link_color
-              var userColor = "rgb(" + parseInt(userColorHEX.slice(0, 2), 16) + ", " + parseInt(userColorHEX.slice(2, 4), 16) + ", " + parseInt(userColorHEX.slice(4, 6), 16) + ")"
-              if (userColor != GM_getValue("opt_display_userColor")) {
-                GM_setValue("opt_display_userColor", userColor)
-                updateCSS()
-              }
-            })
+            if (GM_getValue("opt_gt2").colorOverrideUseLegacy) {
+              requestUserAlt(screenName, res => {
+                var userColorHEX = res.profile_link_color
+                //var userColor = "rgb(" + parseInt(userColorHEX.slice(0, 2), 16) + ", " + parseInt(userColorHEX.slice(2, 4), 16) + ", " + parseInt(userColorHEX.slice(4, 6), 16) + ")"
+                var userColor = parseInt(userColorHEX.slice(0, 2), 16) + ", " + parseInt(userColorHEX.slice(2, 4), 16) + ", " + parseInt(userColorHEX.slice(4, 6), 16)
+                /*if (userColor != GM_getValue("opt_display_userColor")) {
+                  GM_setValue("opt_display_userColor", userColor)
+                  updateCSS()
+                }*/
+                if (userColor != GM_getValue("opt_gt2").colorOverrideValue) {
+                  GM_setValue("opt_gt2", Object.assign(GM_getValue("opt_gt2"), { colorOverrideValue: userColor}))
+                  document.documentElement.style.setProperty("--color-override", userColor)
+                }
+              })
+            }
           }
         }
       }
