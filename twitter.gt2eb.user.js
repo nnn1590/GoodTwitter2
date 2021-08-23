@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          GoodTwitter 2 - Electric Boogaloo (FORK)
-// @version       0.0.30
+// @version       0.0.31.1
 // @description   A try to make Twitter look good again
 // @author        schwarzkatz
 // @license       MIT
@@ -27,7 +27,7 @@
 // @require       https://github.com/nnn1590/GoodTwitter2/raw/nnn1590-dev-1/twitter.gt2eb.polyfills.js
 // @require       https://code.jquery.com/jquery-3.5.1.min.js
 // @require       https://gist.github.com/raw/2625891/waitForKeyElements.js
-// @require       https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js
+// @require       https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.es5.min.js
 // @updateURL     https://github.com/nnn1590/GoodTwitter2/raw/nnn1590-dev-1/twitter.gt2eb.user.js
 // @downloadURL   https://github.com/nnn1590/GoodTwitter2/raw/nnn1590-dev-1/twitter.gt2eb.user.js
 // ==/UserScript==
@@ -406,6 +406,8 @@
     colorOverrideValue:       "85, 102, 68",
     colorOverrideUseLegacy:   false,
     hideMessageBox:           true,
+    rosettaIcons:             false,
+    favoriteLikes:            false,
 
     updateNotifications:      true,
     expandTcoShortlinks:      true,
@@ -556,6 +558,8 @@
           ${getSettingTogglePart("colorOverride", `<div class="gt2-pickr"></div>`)}
           ${getSettingTogglePart("colorOverrideUseLegacy")}
           ${getSettingTogglePart("hideMessageBox")}
+          ${getSettingTogglePart("rosettaIcons")}
+          ${getSettingTogglePart("favoriteLikes")}
           <div class="gt2-settings-seperator"></div>
 
           <div class="gt2-settings-sub-header">${getLocStr("settingsHeaderOther")}</div>
@@ -904,6 +908,18 @@
 
     let profileSel = "div[data-testid=primaryColumn] > div > div:nth-child(2) > div > div > div:nth-child(1) > div:nth-child(2)"
 
+    waitForKeyElements(`div[data-testid=primaryColumn] > div > div:nth-child(2) > div > div > div:nth-child(1)`, () => {
+      // observe changes
+      let lplMut = new MutationObserver(mut => {
+        mut.forEach(m => {
+          console.log(m.target)
+        })
+      }).observe($(`div[data-testid=primaryColumn] > div > div:nth-child(2) > div > div > div:nth-child(1)`)[0], {
+        childList: true,
+        subtree: true
+      })
+    })
+
     waitForKeyElements(`a[href='/${currentScreenName}/photo' i] img`, () => {
       // remove previously added profile
       if ($(".gt2-legacy-profile-nav").length) {
@@ -1138,7 +1154,7 @@
 
   // force latest tweets view.
   function forceLatest() {
-    let sparkOptToggle  = "div[data-testid=primaryColumn] > div > div:nth-child(1) > div:nth-child(1) > div > div > div > div > div:nth-child(2) div[aria-haspopup=true]"
+    let sparkOptToggle  = "div[data-testid=primaryColumn] > div > div:nth-child(1) > div:nth-child(1) > div > div > div > div > div:nth-child(2) div[aria-haspopup]"
     let sparkOpt        = "#react-root h2 + div > div:nth-child(2) > div > div > div > div:nth-child(2) > div:nth-child(3)"
 
     GM_setValue("hasRun_forceLatest", false)
@@ -1952,8 +1968,11 @@
       }
       return $p
     }
+
     // small follow topic above tweets
-    waitForKeyElements(`[data-gt2-path=home] [data-testid=primaryColumn] section article > div > div > div > div:not([data-testid=tweet]) > div > div > div`, e => $(e).addClass("gt2-hidden"))
+    // if ((GM_getValue("opt_gt2").hideFollowSuggestionsSel & 1) == 1) {
+    //   waitForKeyElements(`[data-gt2-path=home] [data-testid=primaryColumn] section article > div > div > div > div:not([data-testid=tweet]) > div > div > div`, e => $(e).addClass("gt2-hidden"))
+    // }
 
     // big follow boxes
     waitForKeyElements(
@@ -1981,6 +2000,13 @@
     $e.find("[name*=COLOR_PICKER]").parents("label").parent().find("*").attr("data-gt2-color-override-ignore", "")
     $e.find("[dir]:nth-child(3) + div:not([dir]) > div > div > div[dir] + div *").attr("data-gt2-color-override-ignore", "")
   })
+
+  // do not add dividers to tweet inline threads
+  waitForKeyElements(`[data-testid=tweet] > div:nth-child(1) > div:nth-child(2):empty`, e => $(e).parents(`[style*="position: absolute"]`).children().attr("data-gt2-divider-add-ignore", ""))
+
+  // color notifications bell
+  waitForKeyElements(`path[d^="M23.61.15c-.375"]`, e => $(e).parents("[role=button]").attr("data-gt2-bell-full-color", ""))
+  waitForKeyElements(`path[d^="M23.24 3.26h-2.425V"]`, e => $(e).parents("[role=button]").removeAttr("data-gt2-bell-full-color", ""))
 
 
   // ################
@@ -2092,6 +2118,7 @@
       green:    ["23, 191, 99",   "9, 102, 51",     "102, 211, 151"],
       red:      ["224, 36, 94",   "159, 12, 58",    "240, 152, 179"],
       redDark:  ["202, 32, 85",   "169, 36, 78",    "216, 137, 161"],
+      yellow:   ["255, 173, 31",  "121, 80, 11",    "255, 203, 112"]
     }
 
     // initialize with the current settings
@@ -2262,7 +2289,7 @@
     return _onSubPage(path, "i", ["display", "keyboard_shortcuts", "flow"])
         || _onSubPage(path, "settings", ["trends", "profile"])
         || _onSubPage(path, "compose", ["tweet"])
-        || _onSubPage(path, "account", ["add"])
+        || _onSubPage(path, "account", ["add", "switch"])
         || _onPage(path, "search-advanced")
         || path.match(/\/(photo|video)\/\d\/?$/)
   }
@@ -2415,7 +2442,7 @@
     if (!isModal) {
       if (!(onPage("", "explore", "home", "hashtag", "i", "messages", "notifications", "places", "search", "settings")
           || onSubPage(null, ["followers", "followers_you_follow", "following", "lists", "moments", "status", "topics"]))) {
-        $("body").addClass("gt2-page-profile")
+        $("body").addClass("gt2-page-profile").removeClass("gt2-profile-not-found")
         $("[class^=gt2-blocked-profile-]").remove()
         $(".gt2-tco-expanded").removeClass("gt2-tco-expanded")
         if (changeType=="init" || !onSubPage(null, ["followers", "followers_you_follow", "following", "lists", "moments", "status"])) {
@@ -2447,8 +2474,9 @@
 
           waitForKeyElements("[data-testid=sidebarColumn] a:nth-child(1) [data-testid=tweetPhoto]", e => {
             if ($(".gt2-profile-media").length) $(".gt2-profile-media").remove()
-            $(e).parents("a[role=link]").parent().parent().parent().parent().parent().parent()
-            .detach().addClass("gt2-profile-media")
+            let $mediaContainer = $(e).parents("a[role=link]").parent().parent().parent().parent().parent()
+            if ($mediaContainer.parent().children().length == 1) $mediaContainer = $mediaContainer.parent()
+            $mediaContainer.detach().addClass("gt2-profile-media")
             .appendTo(".gt2-left-sidebar")
           })
 
