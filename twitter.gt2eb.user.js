@@ -1,11 +1,13 @@
 // ==UserScript==
-// @name          GoodTwitter 2 - Electric Boogaloo
+// @name          GoodTwitter 2 - Electric Boogaloo (FORK)
 // @version       0.0.31.1
 // @description   A try to make Twitter look good again
 // @author        schwarzkatz
 // @license       MIT
 // @match         https://twitter.com/*
 // @exclude       https://twitter.com/i/cards/*
+// @exclude       https://twitter.com/i/moments/edit/*
+// @exclude       https://twitter.com/i/directory/*
 // @exclude       https://twitter.com/i/release_notes
 // @exclude       https://twitter.com/*/privacy
 // @exclude       https://twitter.com/*/tos
@@ -18,16 +20,16 @@
 // @grant         GM_info
 // @grant         GM_xmlhttpRequest
 // @connect       api.twitter.com
-// @resource      css https://github.com/Bl4Cc4t/GoodTwitter2/raw/master/twitter.gt2eb.style.css
+// @resource      css https://github.com/nnn1590/GoodTwitter2/raw/nnn1590-dev-1/twitter.gt2eb.style.css
 // @resource      emojiRegex https://github.com/mathiasbynens/emoji-regex/raw/main/es2015/index.js
 // @resource      pickrCss https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css
-// @require       https://github.com/Bl4Cc4t/GoodTwitter2/raw/master/twitter.gt2eb.i18n.js
-// @require       https://github.com/Bl4Cc4t/GoodTwitter2/raw/master/twitter.gt2eb.polyfills.js
+// @require       https://github.com/nnn1590/GoodTwitter2/raw/nnn1590-dev-1/twitter.gt2eb.i18n.js
+// @require       https://github.com/nnn1590/GoodTwitter2/raw/nnn1590-dev-1/twitter.gt2eb.polyfills.js
 // @require       https://code.jquery.com/jquery-3.5.1.min.js
 // @require       https://gist.github.com/raw/2625891/waitForKeyElements.js
 // @require       https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.es5.min.js
-// @updateURL     https://github.com/Bl4Cc4t/GoodTwitter2/raw/master/twitter.gt2eb.user.js
-// @downloadURL   https://github.com/Bl4Cc4t/GoodTwitter2/raw/master/twitter.gt2eb.user.js
+// @updateURL     https://github.com/nnn1590/GoodTwitter2/raw/nnn1590-dev-1/twitter.gt2eb.user.js
+// @downloadURL   https://github.com/nnn1590/GoodTwitter2/raw/nnn1590-dev-1/twitter.gt2eb.user.js
 // ==/UserScript==
 
 (function($, waitForKeyElements) {
@@ -241,6 +243,25 @@
   }
 
 
+  function requestUserAlt(screenName, cb) {
+    GM_xmlhttpRequest({
+      method: "GET",
+      url: getRequestURL(`https://api.twitter.com/1.1/users/show.json`, {
+        screen_name: screenName,
+        include_entities: false
+      }),
+      headers: getRequestHeaders(),
+      onload: function(res) {
+        if (res.status == "200") {
+          cb(JSON.parse(res.response))
+        } else {
+          console.warn(res)
+        }
+      }
+    })
+  }
+
+
   function blockUser(user_id, block, cb) {
     GM_xmlhttpRequest({
       method: "POST",
@@ -383,6 +404,7 @@
     fontOverrideValue:        "Arial",
     colorOverride:            false,
     colorOverrideValue:       "85, 102, 68",
+    colorOverrideUseLegacy:   false,
     hideMessageBox:           true,
     rosettaIcons:             false,
     favoriteLikes:            false,
@@ -534,6 +556,7 @@
             </div>
           `)}
           ${getSettingTogglePart("colorOverride", `<div class="gt2-pickr"></div>`)}
+          ${getSettingTogglePart("colorOverrideUseLegacy")}
           ${getSettingTogglePart("hideMessageBox")}
           ${getSettingTogglePart("rosettaIcons")}
           ${getSettingTogglePart("favoriteLikes")}
@@ -641,6 +664,10 @@
     // hide color input if colorOverride is disabled
     $(".gt2-color-override-pickr")
     [GM_getValue("opt_gt2").colorOverride ? "removeClass" : "addClass"]("gt2-hidden")
+
+    // disable lgecay theme color toggle if colorOverride is disabled
+    $("[data-setting-name=colorOverrideUseLegacy]")
+    [GM_getValue("opt_gt2").colorOverride ? "removeClass" : "addClass"]("gt2-disabled")
 
     // hide follow suggestions
     $("[data-setting-name=hideFollowSuggestionsSel]")
@@ -863,7 +890,7 @@
         <div class="gt2-sidebar-notice-content">
           ${getSvg("tick")} ${getLocStr("updatedInfo").replace("$version$", `v${v}`)}<br />
           <a
-            href="https://github.com/Bl4Cc4t/GoodTwitter2/blob/master/doc/changelog.md#${v.replace(/\./g, "")}"
+            href="https://github.com/nnn1590/GoodTwitter2/blob/nnn1590-dev-1/doc/changelog.md#${v.replace(/\./g, "")}"
             target="_blank">
             ${getLocStr("updatedInfoChangelog")}
           </a>
@@ -1875,13 +1902,13 @@
 
 
   // user color
-  waitForKeyElements(`body:not(.gt2-opt-color-override) [data-testid=SideNav_NewTweet_Button]`, e => {
+  /*waitForKeyElements(`body:not(.gt2-opt-color-override) [data-testid=SideNav_NewTweet_Button]`, e => {
     let userColor = $(e).css("background-color")
     if (userColor != GM_getValue("opt_display_userColor")) {
       GM_setValue("opt_display_userColor", userColor)
       updateCSS()
     }
-  })
+  })*/
 
   // background color
   new MutationObserver(mut => {
@@ -2418,6 +2445,23 @@
         $("body").addClass("gt2-page-profile").removeClass("gt2-profile-not-found")
         $("[class^=gt2-blocked-profile-]").remove()
         $(".gt2-tco-expanded").removeClass("gt2-tco-expanded")
+        if (changeType=="init" || !onSubPage(null, ["followers", "followers_you_follow", "following", "lists", "moments", "status"])) {
+          if (GM_getValue("opt_gt2").colorOverrideUseLegacy) {
+            requestUserAlt(getPath().split("/")[0].split("?")[0].split("#")[0], res => {
+              var userColorHEX = res.profile_link_color
+              //var userColor = "rgb(" + parseInt(userColorHEX.slice(0, 2), 16) + ", " + parseInt(userColorHEX.slice(2, 4), 16) + ", " + parseInt(userColorHEX.slice(4, 6), 16) + ")"
+              var userColor = parseInt(userColorHEX.slice(0, 2), 16) + ", " + parseInt(userColorHEX.slice(2, 4), 16) + ", " + parseInt(userColorHEX.slice(4, 6), 16)
+              /*if (userColor != GM_getValue("opt_display_userColor")) {
+                GM_setValue("opt_display_userColor", userColor)
+                updateCSS()
+              }*/
+              if (userColor != GM_getValue("opt_gt2").colorOverrideValue) {
+                GM_setValue("opt_gt2", Object.assign(GM_getValue("opt_gt2"), { colorOverrideValue: userColor}))
+                document.documentElement.style.setProperty("--color-override", userColor)
+              }
+            })
+          }
+        }
         if (GM_getValue("opt_gt2").legacyProfile) {
           if ($("body").attr("data-gt2-prev-path") != path()) {
             $("a[href$='/photo'] img").data("alreadyFound", false)
@@ -2441,6 +2485,30 @@
         $("body").removeClass("gt2-page-profile")
         $(".gt2-legacy-profile-banner, .gt2-legacy-profile-nav").remove()
         $(".gt2-legacy-profile-info").remove()
+        if (isLoggedIn()) {
+          let screenName = getInfo().screenName
+          let screenNameFromPath = getPath().split("/")[0].split("?")[0].split("#")[0]
+          if ((changeType=="init" && onSubPage(null, ["followers", "followers_you_follow", "following", "lists", "moments", "status"])) && screenNameFromPath != "i") {
+            screenName = screenNameFromPath
+          }
+          if (changeType=="init" || !onSubPage(null, ["followers", "followers_you_follow", "following", "lists", "moments", "status"])) {
+            if (GM_getValue("opt_gt2").colorOverrideUseLegacy) {
+              requestUserAlt(screenName, res => {
+                var userColorHEX = res.profile_link_color
+                //var userColor = "rgb(" + parseInt(userColorHEX.slice(0, 2), 16) + ", " + parseInt(userColorHEX.slice(2, 4), 16) + ", " + parseInt(userColorHEX.slice(4, 6), 16) + ")"
+                var userColor = parseInt(userColorHEX.slice(0, 2), 16) + ", " + parseInt(userColorHEX.slice(2, 4), 16) + ", " + parseInt(userColorHEX.slice(4, 6), 16)
+                /*if (userColor != GM_getValue("opt_display_userColor")) {
+                  GM_setValue("opt_display_userColor", userColor)
+                  updateCSS()
+                }*/
+                if (userColor != GM_getValue("opt_gt2").colorOverrideValue) {
+                  GM_setValue("opt_gt2", Object.assign(GM_getValue("opt_gt2"), { colorOverrideValue: userColor}))
+                  document.documentElement.style.setProperty("--color-override", userColor)
+                }
+              })
+            }
+          }
+        }
       }
     }
 

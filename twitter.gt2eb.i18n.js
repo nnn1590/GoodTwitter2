@@ -68,11 +68,6 @@ let i18n = {
   "squareAvatars": "Eckige Avatare",
   "tweetIconsPullLeft": "Linksbündige Tweet-Interaktions-Knöpfe",
   "updateNotifications": "GoodTwitter-2-Update-Benachrichtigungen",
-  "rosettaIcons": "*NEW* Rosetta Icons",
-  "rosettaIconsDesc": "*NEW* Use the pre 2017 Rosetta icon font",
-  "favorite": "*NEW* Favorite",
-  "favorites": "*NEW* Favorites",
-  "favoriteLikes": "*NEW* Replace Likes with Favorites",
 
   "updatedInfo": "Aktualisiert auf $version$!",
   "updatedInfoChangelog": "Changelog"
@@ -123,6 +118,8 @@ let i18n = {
   "fontOverrideDesc": "Set a custom font to override the default one. This works only if you have the font installed.",
   "colorOverride": "Use Custom Color",
   "colorOverrideDesc": "Set a custom color to override the default one.",
+  "colorOverrideUseLegacy": "Use Legacy Theme Color",
+  "colorOverrideUseLegacyDesc": "Set the custom color to the legacy account-specific theme color (profile_link_color).<br/>While this setting is enabled, the custom color settings will be changed to the legacy theme colors.",
   "forceLatest": "Force Latest",
   "forceLatestDesc": "Enabling the latest tweets mode is not permanent anymore. With this setting active, the site automatically switches back to the latest tweets mode.",
   "hideMessageBox": "Hide Message Box",
@@ -224,11 +221,6 @@ let i18n = {
   "squareAvatars": "Avatares Cuadrados",
   "tweetIconsPullLeft": "*NEW* Bunch up Tweet Interaction Buttons to the Left",
   "updateNotifications": "Notificaciones de actualización de GoodTwitter 2",
-  "rosettaIcons": "*NEW* Rosetta Icons",
-  "rosettaIconsDesc": "*NEW* Use the pre 2017 Rosetta icon font",
-  "favorite": "*NEW* Favorite",
-  "favorites": "*NEW* Favorites",
-  "favoriteLikes": "*NEW* Replace Likes with Favorites",
 
   "updatedInfo": "¡Actualizado a $version$!",
   "updatedInfoChangelog": "Lista de cambios"
@@ -302,11 +294,6 @@ let i18n = {
   "squareAvatars": "Avatars Carrés",
   "tweetIconsPullLeft": "*NEW* Bunch up Tweet Interaction Buttons to the Left",
   "updateNotifications": "Notification de mise à jour de GoodTwitter 2",
-  "rosettaIcons": "*NEW* Rosetta Icons",
-  "rosettaIconsDesc": "*NEW* Use the pre 2017 Rosetta icon font",
-  "favorite": "*NEW* Favorite",
-  "favorites": "*NEW* Favorites",
-  "favoriteLikes": "*NEW* Replace Likes with Favorites",
 
   "updatedInfo": "Mis à jour à la version $version$ !",
   "updatedInfoChangelog": "Journal des modifications"
@@ -357,6 +344,8 @@ let i18n = {
   "fontOverrideDesc": "デフォルトのフォントを設定したカスタムフォントに変更します。この機能は設定したフォントがインストールされている場合にのみ機能します。",
   "colorOverride": "*NEW* Use Custom Color",
   "colorOverrideDesc": "*NEW* Set a custom color to override the default one.",
+  "colorOverrideUseLegacy": "レガシーテーマカラーを使用する",
+  "colorOverrideUseLegacyDesc": "従来のアカウント固有のテーマカラー(profile_link_color)をカスタムカラーとして使用します。<br/>この設定が有効な間は、カスタムカラー設定は従来のテーマカラーで変更されます。",
   "forceLatest": "最新ツイート表示を強制する",
   "forceLatestDesc": "本来、最新ツイート表示モードを永続的に表示することはできません。この設定を有効にすると自動かつ強制的に最新ツイート表示モードに切り替えることができます。",
   "hideMessageBox": "メッセージボックスを非表示にする",
@@ -380,11 +369,6 @@ let i18n = {
   "squareAvatars": "四角いアイコン表示",
   "tweetIconsPullLeft": "ツイートアイコンを左に寄せる",
   "updateNotifications": "GoodTwitter2の更新通知",
-  "rosettaIcons": "*NEW* Rosetta Icons",
-  "rosettaIconsDesc": "*NEW* Use the pre 2017 Rosetta icon font",
-  "favorite": "*NEW* Favorite",
-  "favorites": "*NEW* Favorites",
-  "favoriteLikes": "*NEW* Replace Likes with Favorites",
 
   "updatedInfo": "バージョン$version$に更新完了しました！",
   "updatedInfoChangelog": "更新履歴"
@@ -458,11 +442,6 @@ let i18n = {
   "squareAvatars": "사각형 프로필 사진",
   "tweetIconsPullLeft": "트윗 아이콘을 왼쪽으로 옮기기",
   "updateNotifications": "GoodTwitter 2 업데이트 알림",
-  "rosettaIcons": "*NEW* Rosetta Icons",
-  "rosettaIconsDesc": "*NEW* Use the pre 2017 Rosetta icon font",
-  "favorite": "*NEW* Favorite",
-  "favorites": "*NEW* Favorites",
-  "favoriteLikes": "*NEW* Replace Likes with Favorites",
 
   "updatedInfo": "$version$ 버전으로 업데이트되었습니다!",
   "updatedInfoChangelog": "변경 기록"
@@ -536,11 +515,6 @@ let i18n = {
   "squareAvatars": "Vierkante Avatars",
   "tweetIconsPullLeft": "*NEW* Bunch up Tweet Interaction Buttons to the Left",
   "updateNotifications": "GoodTwitter 2 Update Notificaties",
-  "rosettaIcons": "*NEW* Rosetta Icons",
-  "rosettaIconsDesc": "*NEW* Use the pre 2017 Rosetta icon font",
-  "favorite": "*NEW* Favorite",
-  "favorites": "*NEW* Favorites",
-  "favoriteLikes": "*NEW* Replace Likes with Favorites",
 
   "updatedInfo": "Ge-update naar $version$!",
   "updatedInfoChangelog": "Changelog"
@@ -597,31 +571,26 @@ let i18n = {
   "hideMessageBoxDesc": "Ukrywa nowy ekran wiadomości, widoczny stale w prawym dolnym rogu.",
   "hideTranslateTweetButton": "Ukryj przycisk tłumaczenia tweetów",
   "hideTrends": "Ukryj trendy",
-  "hideFollowSuggestions": "*NEW* Hide Follow Suggestions (Topics & Users)",
-  "keepTweetsInTL": "*NEW* Keep Tweets (this does not work atm)",
-  "keepTweetsInTLDesc": "*NEW* Keep the site from automatically removing tweets once they are out of view.",
-  "leftTrends": "*NEW* Left Sidebar Trends",
-  "leftTrendsDesc": "*NEW* Show the trends in the left sidebar.",
+  "hideFollowSuggestions": "Ukryj Może Ci się spodobać",
+  "keepTweetsInTL": "Zachowuj tweety (to obecnie nie działa)",
+  "keepTweetsInTLDesc": "Niech strona nie usuwa automatycznie tweetów spoza widoku.",
+  "leftTrends": "Trendy na pasku po lewej",
+  "leftTrendsDesc": "Pokazuj trendy na pasku po lewej.",
   "leftMedia": "*NEW* Left Sidebar Media",
   "leftMediaDesc": "*NEW* Show the media container on profile pages in the left sidebar.",
-  "enableQuickBlock": "*NEW* Enable Quickblock",
+  "enableQuickBlock": "Włącz szybkie blokowanie.",
   "enableQuickBlockDesc": "*NEW* Hover over the follow button for 3 seconds to block a profile.",
-  "legacyProfile": "*NEW* Legacy Profile Layout",
-  "show10Trends": "*NEW* Always Show 10 Trends",
-  "stickySidebars": "*NEW* Sticky Sidebars",
-  "smallSidebars": "*NEW* Small Sidebars",
-  "smallSidebarsDesc": "*NEW* 290px instead of 350px wide sidebars.",
-  "squareAvatars": "*NEW* Square Avatars",
+  "legacyProfile": "Stary układ profilu",
+  "show10Trends": "Zawsze pokazuj 10 trendów",
+  "stickySidebars": "Przylepne paski boczne",
+  "smallSidebars": "Węższe paski boczne",
+  "smallSidebarsDesc": "Paski boczne o szerokości 290px zamiast 350px.",
+  "squareAvatars": "Kwadratowe awatary",
   "tweetIconsPullLeft": "*NEW* Bunch up Tweet Interaction Buttons to the Left",
-  "updateNotifications": "*NEW* GoodTwitter 2 Update Notifications",
-  "rosettaIcons": "*NEW* Rosetta Icons",
-  "rosettaIconsDesc": "*NEW* Use the pre 2017 Rosetta icon font",
-  "favorite": "*NEW* Favorite",
-  "favorites": "*NEW* Favorites",
-  "favoriteLikes": "*NEW* Replace Likes with Favorites",
+  "updateNotifications": "Powiadomienia o aktualizacjach GoodTwitter 2",
 
-  "updatedInfo": "*NEW* Updated to $version$!",
-  "updatedInfoChangelog": "*NEW* Changelog"
+  "updatedInfo": "Zaktualizowano do $version$!",
+  "updatedInfoChangelog": "Lista zmian"
 },
 "pt": {
   "composeNewTweet": "Tweetar",
@@ -692,11 +661,6 @@ let i18n = {
   "squareAvatars": "Avatares Quadrados",
   "tweetIconsPullLeft": "*NEW* Bunch up Tweet Interaction Buttons to the Left",
   "updateNotifications": "Notificações de atualização do GoodTwitter 2",
-  "rosettaIcons": "*NEW* Rosetta Icons",
-  "rosettaIconsDesc": "*NEW* Use the pre 2017 Rosetta icon font",
-  "favorite": "*NEW* Favorite",
-  "favorites": "*NEW* Favorites",
-  "favoriteLikes": "*NEW* Replace Likes with Favorites",
 
   "updatedInfo": "Atualizado para á $version$!",
   "updatedInfoChangelog": "Changelog"
@@ -848,11 +812,6 @@ let i18n = {
   "squareAvatars": "Квадратные аватары",
   "tweetIconsPullLeft": "Сгруппировать кнопки взаимодействия с твитами слева",
   "updateNotifications": "Уведомления об обновлениях GoodTwitter 2",
-  "rosettaIcons": "*NEW* Rosetta Icons",
-  "rosettaIconsDesc": "*NEW* Use the pre 2017 Rosetta icon font",
-  "favorite": "*NEW* Favorite",
-  "favorites": "*NEW* Favorites",
-  "favoriteLikes": "*NEW* Replace Likes with Favorites",
 
   "updatedInfo": "Обновлено до $version$!",
   "updatedInfoChangelog": "Список изменений"
@@ -926,11 +885,6 @@ let i18n = {
   "squareAvatars": "Fyrkantiga Visningsbilder",
   "tweetIconsPullLeft": "*NEW* Bunch up Tweet Interaction Buttons to the Left",
   "updateNotifications": "*NEW* GoodTwitter 2 update notifications",
-  "rosettaIcons": "*NEW* Rosetta Icons",
-  "rosettaIconsDesc": "*NEW* Use the pre 2017 Rosetta icon font",
-  "favorite": "*NEW* Favorite",
-  "favorites": "*NEW* Favorites",
-  "favoriteLikes": "*NEW* Replace Likes with Favorites",
 
   "updatedInfo": "*NEW* Updated to $version$!",
   "updatedInfoChangelog": "*NEW* Changelog"
@@ -1004,11 +958,6 @@ let i18n = {
   "squareAvatars": "正方形的頭像",
   "tweetIconsPullLeft": "*NEW* Bunch up Tweet Interaction Buttons to the Left",
   "updateNotifications": "GoodTwitter 2 更新通知",
-  "rosettaIcons": "*NEW* Rosetta Icons",
-  "rosettaIconsDesc": "*NEW* Use the pre 2017 Rosetta icon font",
-  "favorite": "*NEW* Favorite",
-  "favorites": "*NEW* Favorites",
-  "favoriteLikes": "*NEW* Replace Likes with Favorites",
 
   "updatedInfo": "更新了 $version$!",
   "updatedInfoChangelog": "更新日誌"
@@ -1082,11 +1031,6 @@ let i18n = {
   "squareAvatars": "正方形头像",
   "tweetIconsPullLeft": "*NEW* Bunch up Tweet Interaction Buttons to the Left",
   "updateNotifications": "GoodTwitter 2 更新通知",
-  "rosettaIcons": "*NEW* Rosetta Icons",
-  "rosettaIconsDesc": "*NEW* Use the pre 2017 Rosetta icon font",
-  "favorite": "*NEW* Favorite",
-  "favorites": "*NEW* Favorites",
-  "favoriteLikes": "*NEW* Replace Likes with Favorites",
 
   "updatedInfo": "升级到 $version$!",
   "updatedInfoChangelog": "更新日志"
