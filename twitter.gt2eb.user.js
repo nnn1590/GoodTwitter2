@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name          GoodTwitter 2 - Electric Boogaloo (FORK)
+// @name          GoodTwitter 2 - Electric Boogaloo (DEV, FORK)
 // @version       0.0.31.1
 // @description   A try to make Twitter look good again
 // @author        schwarzkatz
