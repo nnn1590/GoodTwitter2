@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          GoodTwitter 2 - Electric Boogaloo (DEV, FORK)
-// @version       0.0.31.1
+// @version       0.0.32
 // @description   A try to make Twitter look good again
 // @author        schwarzkatz
 // @license       MIT
@@ -21,7 +21,7 @@
 // @grant         GM_xmlhttpRequest
 // @connect       api.twitter.com
 // @resource      css https://github.com/nnn1590/GoodTwitter2/raw/nnn1590-dev-based-on-dev-1/twitter.gt2eb.style.css
-// @resource      emojiRegex https://github.com/mathiasbynens/emoji-regex/raw/main/es2015/index.js
+// @resource      emojiRegex https://github.com/nnn1590/GoodTwitter2/raw/nnn1590-dev-based-on-dev-1/data/emoji-regex.txt
 // @resource      pickrCss https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css
 // @require       https://github.com/nnn1590/GoodTwitter2/raw/nnn1590-dev-based-on-dev-1/twitter.gt2eb.i18n.js
 // @require       https://github.com/nnn1590/GoodTwitter2/raw/nnn1590-dev-based-on-dev-1/twitter.gt2eb.polyfills.js
@@ -85,7 +85,7 @@
   }
 
   String.prototype.replaceAt = function(index, length, text) {
-    return `${[...this.toString()].slice(0, index).join("")}${text}${[...this.toString()].slice(index + length).join("")}`
+    return `${this.toString().slice(0, index)}${text}${this.toString().slice(index + length)}`
   }
 
   String.prototype.insertAt = function(index, text) {
@@ -93,6 +93,7 @@
   }
 
   const defaultAvatarUrl = "https://abs.twimg.com/sticky/default_profile_images/default_profile.png"
+  const emojiRegexp = new RegExp(`(${GM_getResourceText("emojiRegex")})`, "gu")
 
 
   // get account information
@@ -320,6 +321,28 @@
       }
     }
 
+    // change indices if emoji(s) appear before the entity
+    // reason: multiple > 0xFFFF codepoint emojis are counted wrong: all but the first emoji have their length reduced by 1.
+    // also, if any emoji > 0xFFFF precedes a url, the indices of the url are misaligned by -1.
+    let match
+    let counter = 0
+    while ((match = emojiRegexp.exec(text)) != null) {
+      let e = match[1]
+      if (e.codePointAt(0) < 0xFFFF) continue
+      counter++
+      for (let i in toReplace) {
+        let tmp = Object.entries(toReplace[i])
+        // skip if not url and first element
+        if (tmp[0][1] != `<a href="` && counter == 1) continue
+        if (tmp[0][0] >= match.index) {
+          toReplace[i] = {
+            [parseInt(tmp[0][0]) + 1]: tmp[0][1],
+            [parseInt(tmp[1][0]) + 1]: tmp[1][1]
+          }
+        }
+      }
+    }
+
     // sort array
     toReplace = toReplace.sort((a, b) => parseInt(Object.keys(a)[0]) - parseInt(Object.keys(b)[0]))
 
@@ -347,21 +370,28 @@
   // replace emojis with the twitter svgs
   String.prototype.replaceEmojis = function() {
     let text = this.toString()
+    .replace(/([\*#0-9])\s\u20E3/ug, "$1\u20E3")
+    .replace(/([\*#0-9])\uFE0F/ug, "$1")
 
     let out = text
-    let re = new RegExp(`(${GM_getResourceText("emojiRegex").match(/return \/(.*)\/gu/)[1]})`, "gu")
     let match
     let offset = 0
-    while ((match = re.exec(text)) != null) {
+    while ((match = emojiRegexp.exec(text)) != null) {
       let e = match[1]
       // get unicode of emoji
-      let uni = e.codePointAt(0).toString(16)
-      if (e.length == 4) {
-        uni += `-${e.codePointAt(2).toString(16)}`
+      let uni = []
+      for (let i = 0; i < e.length; i++) {
+        uni.push(e.codePointAt(i).toString(16))
+        if (e.codePointAt(i) > 0xFFFF) i++
       }
 
+      // remove fe0f from non joined emojis
+      if (uni.length > 1 && uni[1].match(/^FE0F$/i)) uni.pop()
+
       // replace with image
-      let img = `<img src="https://abs-0.twimg.com/emoji/v2/svg/${uni}.svg" alt="${e}" class="gt2-emoji" />`
+      // https://abs-0.twimg.com/emoji/v2/svg/1f647.svg
+      // https://abs-0.twimg.com/emoji/v2/svg/1f647-200d-2640-fe0f.svg
+      let img = `<img src="https://abs-0.twimg.com/emoji/v2/svg/${uni.join("-")}.svg" alt="${e}" class="gt2-emoji" />`
       out = out.replaceAt(match.index + offset, e.length, img)
 
       offset += img.length - e.length
@@ -400,6 +430,7 @@
 
     hideFollowSuggestions:    false,
     hideFollowSuggestionsSel: 7,
+    hideFollowSuggestionsLocSel: 3,
     fontOverride:             false,
     fontOverrideValue:        "Arial",
     colorOverride:            false,
@@ -537,17 +568,34 @@
 
           <div class="gt2-settings-sub-header">${getLocStr("settingsHeaderGlobalLook")}</div>
           ${getSettingTogglePart("hideFollowSuggestions", `
-            <div class="${GM_getValue("opt_gt2").hideFollowSuggestions ? "" : "gt2-hidden"}" data-setting-name="hideFollowSuggestionsSel">
-              ${["topics", "users", "navLists"].map((e, i) => {
-                let x = Math.pow(2, i)
-                return `<div>
-                  <span>${getLocStr(e)}</span>
-                  <div class="gt2-setting-toggle ${(GM_getValue("opt_gt2").hideFollowSuggestionsSel & x) == x ? "gt2-active" : ""}" data-hfs-type="${x}">
-                    <div></div>
-                    <div>${getSvg("tick")}</div>
-                  </div>
+            <div data-setting-name="hideFollowSuggestionsBox" class="${GM_getValue("opt_gt2").hideFollowSuggestions ? "" : "gt2-hidden"}">
+              ${getLocStr("hideFollowSuggestionsBox").replace("$type$", `
+                <div data-setting-name="hideFollowSuggestionsSel">
+                  ${["topics", "users", "navLists"].map((e, i) => {
+                    let x = Math.pow(2, i)
+                    return `<div>
+                      <span>${getLocStr(e)}</span>
+                      <div class="gt2-setting-toggle ${(GM_getValue("opt_gt2").hideFollowSuggestionsSel & x) == x ? "gt2-active" : ""}" data-hfs-type="${x}">
+                        <div></div>
+                        <div>${getSvg("tick")}</div>
+                      </div>
+                    </div>
+                  `}).join("")}
                 </div>
-              `}).join("")}
+              `).replace("$location$", `
+                <div data-setting-name="hideFollowSuggestionsLocSel">
+                  ${["Timeline", "Sidebars"].map((e, i) => {
+                    let x = Math.pow(2, i)
+                    return `<div>
+                      <span>${getLocStr(`settingsHeader${e}`)}</span>
+                      <div class="gt2-setting-toggle ${(GM_getValue("opt_gt2").hideFollowSuggestionsLocSel & x) == x ? "gt2-active" : ""}" data-hfs-loc="${x}">
+                        <div></div>
+                        <div>${getSvg("tick")}</div>
+                      </div>
+                    </div>
+                  `}).join("")}
+                </div>
+              `)}
             </div>
           `)}
           ${getSettingTogglePart("fontOverride", `
@@ -628,6 +676,10 @@
       let opt = GM_getValue("opt_gt2")
       GM_setValue("opt_gt2", Object.assign(opt, { ["hideFollowSuggestionsSel"]: opt.hideFollowSuggestionsSel ^ parseInt($(this).attr("data-hfs-type")) }))
     }
+    if ($(this).is("[data-hfs-loc]")) {
+      let opt = GM_getValue("opt_gt2")
+      GM_setValue("opt_gt2", Object.assign(opt, { ["hideFollowSuggestionsLocSel"]: opt.hideFollowSuggestionsLocSel ^ parseInt($(this).attr("data-hfs-loc")) }))
+    }
     disableTogglesIfNeeded()
   })
 
@@ -670,7 +722,7 @@
     [GM_getValue("opt_gt2").colorOverride ? "removeClass" : "addClass"]("gt2-disabled")
 
     // hide follow suggestions
-    $("[data-setting-name=hideFollowSuggestionsSel]")
+    $("[data-setting-name=hideFollowSuggestionsBox]")
     [GM_getValue("opt_gt2").hideFollowSuggestions ? "removeClass" : "addClass"]("gt2-hidden")
   }
 
@@ -1085,10 +1137,10 @@
 
     // profile suspended / not found / temporarily restricted (first view)
     waitForKeyElements([
-      `[data-testid=emptyState] > div:nth-child(2) > *:not(a)`,                               // not found
-      `[data-testid=emptyState] [href="https://support.twitter.com/articles/18311"]`,         // suspended
-      `[data-testid=emptyState] [href="https://support.twitter.com/articles/20169222"]`,      // withheld in country
-      `[data-testid=UserDescription] [href="https://support.twitter.com/articles/20169199"]`  // temporarily unavailable (Media Policy Violation)
+      `body:not([data-gt2-path^="messages"]) [data-testid=emptyState] > div:nth-child(2) > *:not(a)`, // not found
+      `[data-testid=emptyState] [href="https://support.twitter.com/articles/18311"]`, // suspended
+      `[data-testid=emptyState] [href="https://support.twitter.com/articles/20169222"]`, // withheld in country
+      `[data-testid=UserDescription] [href="https://support.twitter.com/articles/20169199"]` // temporarily unavailable (Media Policy Violation)
     ].join(", "), () => {
       let $tmp = $(profileSel).find("> div:nth-child(2) > div > div")
       let i = {
@@ -1443,8 +1495,10 @@
 
   // add translate button
   if (!GM_getValue("opt_gt2").hideTranslateTweetButton) {
-    waitForKeyElements("body:not(.gt2-page-tweet) [data-testid=tweet] [lang], [data-testid=tweet] + div > div:nth-child(2) [role=link] [lang]", function(e) {
+    waitForKeyElements(`[data-testid=tweet] [lang],
+                        [data-testid=tweet] + div > div:nth-child(2) [role=link] [lang]`, function(e) {
       let $e = $(e)
+      if ($e.siblings().length) return
       let tweetLang = $e.attr("lang")
       let userLang  = getLang()
           userLang  = userLang == "en-GB" ? "en" : userLang
@@ -1746,7 +1800,6 @@
           left: ${Math.round(pos.left) - 274}px !important;
           top: ${Math.round(pos.top) + 35}px !important;
         }
-
       </style>
     `)
   })
@@ -1755,7 +1808,7 @@
   // remove class on next click
   $("body").on("click", ":not(.gt2-toggle-acc-switcher-dropdown), :not(div[data-testid=SideNav_AccountSwitcher_Button])", function() {
     setTimeout(function () {
-      if (!$("a[href='/account/add']").length) {
+      if (!$("a[href='/i/flow/login']").length) {
         $("body").removeClass("gt2-acc-switcher-active")
       }
     }, 2000)
@@ -1953,7 +2006,7 @@
 
 
   // hide timeline follow suggestions
-  if (GM_getValue("opt_gt2").hideFollowSuggestions) {
+  if (GM_getValue("opt_gt2").hideFollowSuggestions && (GM_getValue("opt_gt2").hideFollowSuggestionsLocSel & 1) == 1) {
     function hideTLFS($p) {
       if (!$p) return $p
       if ($p.prev().length) {
@@ -2002,7 +2055,8 @@
   })
 
   // do not add dividers to tweet inline threads
-  waitForKeyElements(`[data-testid=tweet]`, e => $(e).parents(`[style*="position: absolute"]`).children().attr("data-gt2-divider-add-ignore", ""))
+  waitForKeyElements(`[style*="position: absolute"] > div > div > a[href^="/i/status/"],
+                      [style*="position: absolute"] > div > div > article`, e => $(e).parents(`[style*="position: absolute"]`).children().attr("data-gt2-divider-add-ignore", ""))
 
   // color notifications bell
   waitForKeyElements(`path[d^="M23.61.15c-.375"]`, e => $(e).parents("[role=button]").attr("data-gt2-bell-full-color", ""))
@@ -2154,7 +2208,11 @@
       // options to set if not logged in
       if (!isLoggedIn()) {
         // get bgColor from cookie
-        opt_display_bgColor      = document.cookie.match(/night_mode=1/) ? "rgb(21, 32, 43)" : "rgb(255, 255, 255)"
+        opt_display_bgColor      = document.cookie.match(/night_mode=1/)
+                                   ? "rgb(21, 32, 43)"
+                                   : document.cookie.match(/night_mode=2/)
+                                     ? "rgb(0, 0, 0)"
+                                     : "rgb(255, 255, 255)"
         opt_display_highContrast = false
         opt_display_fontSize     = "15px"
         opt_display_userColor    = "rgb(29, 161, 242)"
@@ -2268,6 +2326,7 @@
 
 
   function beforeUrlChange(path) {
+    path = path.split("?")[0].split("#")[0]
     // [LPL] reattach buttons to original position
     if (!_isModal(path)) {
       let $b = $("div[data-testid=primaryColumn] > div > div:nth-child(2) > div > div > div:nth-child(1) > div:nth-child(2) > div:nth-child(1)")
@@ -2377,7 +2436,7 @@
 
     // handle stuff in sidebars
     handleTrends()
-    if (GM_getValue("opt_gt2").hideFollowSuggestions) {
+    if (GM_getValue("opt_gt2").hideFollowSuggestions && (GM_getValue("opt_gt2").hideFollowSuggestionsLocSel & 2) == 2) {
       let sel = GM_getValue("opt_gt2").hideFollowSuggestionsSel
 
       // topic suggestions
@@ -2406,7 +2465,7 @@
     if (onSubPage(null, ["status"])) {
       $("body").addClass("gt2-page-tweet")
       // scroll up on load
-      waitForKeyElements("[data-testid=tweet] + div [href$=source-labels]", () => window.scroll(0, window.pageYOffset - 56.79999923706055))
+      waitForKeyElements("[data-testid=tweet] [href$=source-labels]", () =>  window.scroll(0, window.pageYOffset - 75))
     } else if (!isModal) {
       $("body").removeClass("gt2-page-tweet")
     }
@@ -2483,8 +2542,9 @@
         }
       } else {
         $("body").removeClass("gt2-page-profile")
-        $(".gt2-legacy-profile-banner, .gt2-legacy-profile-nav").remove()
-        $(".gt2-legacy-profile-info").remove()
+        $(`.gt2-legacy-profile-banner,
+           .gt2-legacy-profile-nav,
+           .gt2-legacy-profile-info`).remove()
         if (isLoggedIn()) {
           let screenName = getInfo().screenName
           let screenNameFromPath = getPath().split("/")[0].split("?")[0].split("#")[0]
