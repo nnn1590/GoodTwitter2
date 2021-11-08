@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          GoodTwitter 2 - Electric Boogaloo (DEV, FORK)
-// @version       0.0.32
+// @version       0.0.32.1
 // @description   A try to make Twitter look good again
 // @author        schwarzkatz
 // @license       MIT
@@ -127,7 +127,7 @@
 
   // check if the user is logged in
   function isLoggedIn() {
-    return document.cookie.match(/ twid=/)
+    return document.cookie.match(/twid=u/)
   }
 
 
@@ -767,10 +767,10 @@
         window.innerWidth < 1005 ? "Explore" : null
       ]) {
         if (!e) continue
-        let $e = $(`nav > a[href="/${e.toLowerCase()}"]`)
+        let $e = $(`nav > a[href^="/${e.toLowerCase()}"]:not([data-testid=AppTabBar_Profile_Link]):not([href$="/lists"])`)
         if (!e.length) continue
         $e.appendTo(".gt2-nav-left")
-        $(`.gt2-nav a[href="/${e.toLowerCase()}"] > div`)
+        $(`.gt2-nav a[href^="/${e.toLowerCase()}"] > div`)
         .append(`
           <div class="gt2-nav-header">
             ${getLocStr(`nav${e}`)}
