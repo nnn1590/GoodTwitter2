@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          GoodTwitter 2 - Electric Boogaloo (DEV, FORK)
-// @version       0.0.33
+// @version       0.0.34
 // @description   A try to make Twitter look good again
 // @author        schwarzkatz
 // @license       MIT
@@ -416,6 +416,7 @@
 
     hideTranslateTweetButton: false,
     tweetIconsPullLeft:       false,
+    hidePromoteTweetButton:   false,
 
     stickySidebars:           true,
     smallSidebars:            false,
@@ -544,12 +545,13 @@
           ${getSettingTogglePart("disableAutoRefresh")}
           ${getSettingTogglePart("keepTweetsInTL")}
           ${getSettingTogglePart("biggerPreviews")}
-          <div class="gt2-settings-seperator"></div>
+          <div class="gt2-settings-separator"></div>
 
           <div class="gt2-settings-sub-header">${getLocStr("statsTweets")}</div>
           ${getSettingTogglePart("hideTranslateTweetButton")}
           ${getSettingTogglePart("tweetIconsPullLeft")}
-          <div class="gt2-settings-seperator"></div>
+          ${getSettingTogglePart("hidePromoteTweetButton")}
+          <div class="gt2-settings-separator"></div>
 
           <div class="gt2-settings-sub-header">${getLocStr("settingsHeaderSidebars")}</div>
           ${getSettingTogglePart("stickySidebars")}
@@ -557,14 +559,14 @@
           ${getSettingTogglePart("hideTrends")}
           ${getSettingTogglePart("leftTrends")}
           ${getSettingTogglePart("show10Trends")}
-          <div class="gt2-settings-seperator"></div>
+          <div class="gt2-settings-separator"></div>
 
           <div class="gt2-settings-sub-header">${getLocStr("navProfile")}</div>
           ${getSettingTogglePart("legacyProfile")}
           ${getSettingTogglePart("squareAvatars")}
           ${getSettingTogglePart("enableQuickBlock")}
           ${getSettingTogglePart("leftMedia")}
-          <div class="gt2-settings-seperator"></div>
+          <div class="gt2-settings-separator"></div>
 
           <div class="gt2-settings-sub-header">${getLocStr("settingsHeaderGlobalLook")}</div>
           ${getSettingTogglePart("hideFollowSuggestions", `
@@ -608,7 +610,7 @@
           ${getSettingTogglePart("hideMessageBox")}
           ${getSettingTogglePart("rosettaIcons")}
           ${getSettingTogglePart("favoriteLikes")}
-          <div class="gt2-settings-seperator"></div>
+          <div class="gt2-settings-separator"></div>
 
           <div class="gt2-settings-sub-header">${getLocStr("settingsHeaderOther")}</div>
           ${getSettingTogglePart("updateNotifications")}
@@ -1130,7 +1132,7 @@
 
       // buttons
       if (!$(".gt2-legacy-profile-nav-right > div").length) {
-        $profile.find("> div:nth-child(1) > div").detach().appendTo(".gt2-legacy-profile-nav-right")
+        $profile.find("> div:nth-child(1) > div:last-child").detach().appendTo(".gt2-legacy-profile-nav-right")
       }
 
     })
@@ -1755,7 +1757,7 @@
 
     waitForKeyElements(`${more} `, () => {
       if ($(more).find("a[href='/explore']").length) return
-      let $hr = $(more).find("> div:empty") // seperator line
+      let $hr = $(more).find("> div:empty") // separator line
       $hr.clone().prependTo(more)
       // items from left menu to attach
       let toAttach = [
@@ -1866,9 +1868,9 @@
       $tweet.find(`a[href^="http://t.co"], a[href^="https://t.co"]`).each(function() {
         $(this).attr("href", res.entities.urls.find(e => e.url == $(this).attr("href").split("?")[0]).expanded_url)
       })
-      $tweet.find(`[data-testid="card.layoutSmall.media"]`).each(function() {
+      $tweet.find(`[data-testid="card.layoutSmall.media"] + *:not(a)`).each(function() {
         console.log(res);
-        $(this).next().wrap(`<a href="${res.entities.urls.find(e => e.url == res.cards.players.find(p => Object.values(p.images)[0].image_url.match($(this).find("img[src*=card_img]").attr("src").match(/card_img\/(\d+)/)[1])).url).expanded_url}"></a>`)
+        $(this).wrap(`<a href="${res.entities.urls.find(e => e.url == res.cards.players.find(p => Object.values(p.images)[0].image_url.match($(this).prev().find("img[src*=card_img]").attr("src").match(/card_img\/(\d+)/)[1])).url).expanded_url}"></a>`)
       })
     })
   })
@@ -2221,6 +2223,11 @@
       // highContrast lightsOut
       if (opt_display_bgColor == "rgb(5, 5, 5)") opt_display_bgColor = "rgb(0, 0, 0)"
 
+      // squareAvatars
+      if (GM_getValue("opt_gt2").squareAvatars) {
+        waitForKeyElements("#circle-hw-shapeclip-clipconfig circle", e => $(e).parent().html(`<rect cx="100" cy="100" ry="10" rx="10" width="200" height="200"></rect>`))
+      }
+
       // insert new stylesheet
       $("html").prepend(`
         <style class="gt2-style">
@@ -2330,7 +2337,7 @@
     // [LPL] reattach buttons to original position
     if (!_isModal(path)) {
       let $b = $("div[data-testid=primaryColumn] > div > div:nth-child(2) > div > div > div:nth-child(1) > div:nth-child(2) > div:nth-child(1)")
-      if (!$b.find("> div").length && $("body").attr("data-gt2-prev-path") != path) {
+      if (!$b.find("> div:last-child:not(:first-child)").length && $("body").attr("data-gt2-prev-path") != path) {
         $(".gt2-legacy-profile-nav-right > div").appendTo($b)
       }
     }

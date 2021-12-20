@@ -130,6 +130,13 @@ $notLegacyProfile: "
   }
 }
 
+@mixin separatorTop {
+  border-top: 1px solid var(--color-gray-dark) !important;
+}
+@mixin separatorBottom {
+  border-bottom: 1px solid var(--color-gray-dark) !important;
+}
+
 
 // normal display
 @media only screen and (min-width: 1350px) {
@@ -624,7 +631,7 @@ main {
       height: -moz-fit-content;
       height: -webkit-fit-content;
       margin-bottom: 10px;
-      border-bottom: 1px solid var(--color-gray-dark);
+      @include separatorBottom;
       & > div {
 
         // scroll behind nav bar
@@ -662,7 +669,7 @@ main {
 
         // ChirpUpdate: readd vertical dividers
         section[aria-labelledby*=accessible-list] div[style*="position: absolute"]:not(:last-child) > div:not(:empty):not([data-gt2-divider-add-ignore]) {
-          border-bottom: 1px solid var(--color-gray-dark);
+          @include separatorBottom;
           & > div:empty {
             height: 8px;
             margin: unset !important;
@@ -693,13 +700,19 @@ main {
             }
           }
         }
-
       }
     }
 
-    div[data-testid=primaryColumn],
+    // separators
+    div[data-testid=primaryColumn] > div > div:nth-child(1),
     & > section {
-      border-top-width: 1px !important;
+      @include separatorTop;
+      @include separatorBottom;
+    }
+
+    // section title separator
+    & > section > div:nth-child(1) > div:not([data-testid=emptyState]) > div:nth-child(1) {
+      @include separatorBottom;
     }
 
     div[data-testid=sidebarColumn] {
@@ -968,6 +981,9 @@ body[data-gt2-path=explore] {
       span, svg {
         color: var(--color-gray-light);
       }
+      a:hover {
+        text-decoration-color: var(--color-gray-light);
+      }
     }
 
     .gt2-legacy-profile-fyk:not(:empty) {
@@ -1191,53 +1207,6 @@ body:not(.gt2-opt-small-sidebars) {
 
 
 .gt2-opt-square-avatars {
-  // /home new tweet
-  div[data-testid=primaryColumn] > div > div:nth-child(2) > div > div:nth-child(2) > div:nth-child(1) > div > div > div > div:nth-child(1),
-  // profile
-  div[data-testid=primaryColumn] > div > div:nth-child(2) > div > div > div:nth-child(1) > div > div:nth-child(1),
-  // tweet
-  [data-testid=tweet] > div > div > div > div > div:nth-child(1) > div > div,
-  // tweet your reply
-  [style*="position: absolute"] > div > div:nth-child(2) [role=progressbar] + div > div > div > div > div > div,
-  // sidebar (who to follow)
-  div[data-testid=UserCell] > div:nth-child(1) > div:nth-child(1) > div,
-  // small profile modals
-  #layers > div:nth-child(2) > div > div > div > div > div > div > div > div > div:nth-child(1),
-  // notifications
-  article > div > div:nth-child(2) > div:nth-child(1) > div > div,
-  // /messages conversation selector (left)
-  [data-testid=conversation] > div > div:nth-child(1) div,
-  // /messages top left avatar
-  &[data-gt2-path^="messages/"] section:nth-last-child(1) > div:nth-child(1) div,
-  // /messages message
-  [data-testid=messageEntry] > div > div:nth-child(3) > div:nth-child(2) {
-    & > a:not([href$="/photo"]),
-    & > a div {
-      border-width: 0;
-      border-radius: 10% !important;
-    }
-    & > a[href$="/photo"] {
-      border-radius: 11.5% !important;
-    }
-  }
-
-  // /messages conversation selector (left)
-  [data-testid=conversation] > div > div:nth-child(1) > div,
-  // /messages top left avatar
-  &[data-gt2-path^="messages/"] section:nth-last-child(1) > div:nth-child(1) > div > div > div > div > div > div > div > div,
-  // edit tweet recipients (replying to)
-  li[data-testid=UserCell] > div:nth-child(1) > div:nth-child(1) div, {
-    border-radius: 10% !important;
-  }
-
-  // tweet (show this thread)
-  article + a[href*="/status/"] {
-    div[role=presentation],
-    div[role=presentation] > div:nth-child(1) > div:nth-child(2) > div {
-      border-radius: 10%;
-    }
-  }
-
   // dashboard profile
   .gt2-dashboard-profile .gt2-avatar {
     border-radius: 11.5%;
@@ -1384,6 +1353,13 @@ body:not(.gt2-opt-color-override) {
 // hide translated tweets
 .gt2-opt-hide-translate-tweet-button {
   [data-testid=tweet] div[lang] + div[role=button] {
+    display: none;
+  }
+}
+
+// hide promote tweet button
+.gt2-opt-hide-promote-tweet-button {
+  [data-testid=tweet] a[href*="/quick_promote_web/"] {
     display: none;
   }
 }
@@ -1666,22 +1642,25 @@ body[data-gt2-path*="/lists/"] [data-testid=primaryColumn] section > h1 + div > 
 }
 
 // trends
-.gt2-trends-handled > div > div > div > div {
-  & > div {
-    // smaller padding next to the trends cog
-    &:nth-child(1) {
-      padding-right: 5px;
+.gt2-trends,
+.gt2-trends-handled {
+  & > div > div > div > div {
+    & > div {
+      // smaller padding next to the trends cog
+      &:nth-child(1) {
+        padding-right: 5px;
+      }
+
+      &[role=button] {
+        border-radius: unset;
+      }
     }
 
-    &[role=button] {
-      border-radius: unset;
+    // ChirpUpdate: readd vertical dividers
+    a[href="/i/trends"],
+    & > div:not(:first-child) {
+      border-top: 1px solid var(--color-gray-dark);
     }
-  }
-
-  // ChirpUpdate: readd vertical dividers
-  a[href="/i/trends"],
-  & > div:not(:first-child) {
-    border-top: 1px solid var(--color-gray-dark);
   }
 }
 
@@ -2044,6 +2023,7 @@ body[data-gt2-path="explore"] {
       top: 56px;
       border-top: 1px solid var(--color-gray-dark);
       transition: top .2s ease-in-out;
+      background-color: var(--color-elem);
     }
   }
 }
@@ -2095,7 +2075,7 @@ body[data-gt2-path^="settings/"] {
       box-shadow: 1px 0 0 var(--color-gray-dark);
       // ChirpUpdate: readd vertical dividers
       [role=tablist] > div > a {
-        border-bottom: 1px solid var(--color-gray-dark);
+        @include separatorBottom;
       }
     }
     section[aria-labelledby=detail-header] {
@@ -2214,7 +2194,7 @@ body[data-gt2-path^="settings/"] {
   .gt2-setting {
     color: var(--color-text);
     box-sizing: border-box;
-    border-bottom: solid 1px var(--color-gray-dark);
+    @include separatorBottom;
     background-color: var(--color-elem);
   }
 
@@ -2251,10 +2231,10 @@ body[data-gt2-path^="settings/"] {
     line-height: 1.3135em;
   }
 
-  .gt2-settings-seperator {
+  .gt2-settings-separator {
     height: 8px;
     background-color: var(--color-elem-sel);
-    border-bottom: solid 1px var(--color-gray-dark);
+    @include separatorBottom;
   }
 
 
@@ -2461,7 +2441,7 @@ body[data-gt2-path="i/moment_maker"] {
 
         // better indicator for active conversation
         div[data-testid=conversation] {
-          border-bottom: solid 1px var(--color-gray-dark);
+          @include separatorBottom;
           &[aria-selected=true] {
             background-color: var(--color-elem-sel);
             & + div {
@@ -2470,17 +2450,24 @@ body[data-gt2-path="i/moment_maker"] {
           }
         }
       }
+
+      // right section
       &:nth-last-child(1) {
         width: 60%;
-        & > div:nth-child(1),
-        & > div:nth-child(1) > div > div > div > div,
-        & > div:nth-child(2) > div > div,
-        & > div:nth-child(2) > div > div > div > div > div > div > div {
-          max-width: unset;
-          margin: unset;
-        }
-        & > div:nth-child(2) > div {
-          background-color: var(--color-elem);
+        & > div {
+          &,
+          & > div > div,
+          & > div > div:nth-child(1) > div > div > div > div,
+          & > div > div:nth-child(2) > div > div > div > div > div > div {
+            max-width: unset;
+            margin: unset;
+          }
+          & > div > div:nth-child(2) > div > div > div > div > div > div {
+            padding: unset;
+            div:not([class]):not([style]):not(:first-child) {
+              padding: 0 16px;
+            }
+          }
         }
 
         // larger avatar in top bar with the name
@@ -2498,7 +2485,7 @@ body[data-gt2-path="i/moment_maker"] {
 }
 body[data-gt2-path="messages/settings"] {
   main > div > div > div > section:nth-last-child(1) > div:nth-child(2) > div > div > div {
-    border-bottom: solid 1px var(--color-gray-dark);
+    @include separatorBottom;
   }
 }
 body[data-gt2-path^="messages/"][data-gt2-path*="/info"] {
@@ -2510,7 +2497,7 @@ body[data-gt2-path^="messages/"][data-gt2-path*="/info"] {
         margin: unset;
       }
       & > :not(:empty) {
-        border-bottom: solid 1px var(--color-gray-dark);
+        @include separatorBottom;
       }
     }
   }
@@ -2526,6 +2513,7 @@ body[data-gt2-path="i/moment_maker"] {
 [data-testid="card.layoutSmall.media"] + a {
   display: flex;
   justify-content: center;
+  width: 100%;
   &,
   &:link,
   &:visited {
@@ -2718,7 +2706,7 @@ div[data-testid=sidebarColumn] .gt2-dashboard-profile {
   .gt2-sidebar-notice-header {
     font-size: incr(19px);
     font-weight: 800;
-    border-bottom: solid 1px var(--color-gray-dark);
+    @include separatorBottom;
     position: relative;
     .gt2-sidebar-notice-close {
       right: 10px;
@@ -2763,7 +2751,7 @@ body[data-promote-url^="/i/tfb/v1/quick_promote"] {
     background-color: #55acee !important;
   }
 
-  // seperators
+  // separators
   .ep-Campaign,
   .ep-DetailedEngagementsSection {
     border-color: var(--color-gray-dark);
