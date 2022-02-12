@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.0.36.1](https://github.com/Bl4Cc4t/GoodTwitter2/pull/399)
+*released 2022-01-28*
+
+#### Changes
+- styling fixes.
+
+## [0.0.36](https://github.com/Bl4Cc4t/GoodTwitter2/pull/394)
+*released 2022-01-27*
+#### New
+- **[New option]** added toggles to always show media with content warnings
+  You can choose what will be shown, depending on the flags of the media.
+
+. | Image
+-|-
+Example tweet | ![image](https://user-images.githubusercontent.com/6740726/151444614-895706ca-b501-4a6a-a9a0-ad1966ed63fc.png)
+Settings | ![image](https://user-images.githubusercontent.com/6740726/151444453-833f6a16-ed24-4efe-97c8-6438bfc1afe2.png)
+
+#### Changes
+- switched translation file format from JSON to YAML
+- fixed "Force Latest" mode for "Latest Tweets" tab
+- some styling fixes
+
+#### Removed
+- broken toggle/code for *Disable auto refresh*
+- broken toggle/code for *Keep tweets in timeline*
+
+
+## [0.0.35](https://github.com/Bl4Cc4t/GoodTwitter2/pull/390)
+*released 2022-01-25*
+#### Changes
+- fixed the square icons (yes, again. the site changed right a day after the last version got released.) ([#383](https://github.com/Bl4Cc4t/GoodTwitter2/issues/383))
+- added support for hexagonal avatars and a toggle to disable them ([#391](https://github.com/Bl4Cc4t/GoodTwitter2/issues/391), [#392](https://github.com/Bl4Cc4t/GoodTwitter2/issues/392))
+
+#### Notes
+- Tampermonkey BETA was fixed a few days after the last update, it should work again now. ([tampermonkey#1385](https://github.com/Tampermonkey/tampermonkey/issues/1385))
+
+
 ## [0.0.34](https://github.com/Bl4Cc4t/GoodTwitter2/pull/382)
 *released 2021-12-13*
 #### Changes
@@ -22,9 +59,9 @@ I hope it gets fixed soon.
 
 ## [0.0.32.1](https://github.com/Bl4Cc4t/GoodTwitter2/pull/360)
 *released 2021-10-15*
-Not many this time. And there are still many things to fix :/
 
 #### Changes
+Not many this time. And there are still many things to fix :/
 - option to choose where to hide follow suggestions (timeline and/or sidebar) ([#354](https://github.com/Bl4Cc4t/GoodTwitter2/issues/354))
 - fixed some silly bugs causing the site to think you're not logged in
 - added squared avatars I forgot in the "tweet your reply" box
