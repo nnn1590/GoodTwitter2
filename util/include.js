@@ -1,8 +1,9 @@
 // check for js-yaml
+
 try {
   require.resolve("yaml")
 } catch (e) {
-  console.log("The required module 'js-yaml' wasn't found. \nPlease install it with 'npm i -g js-yaml'")
+  console.log("The required module 'yaml' wasn't found. \nPlease install it with 'npm i yaml'")
   process.exit()
 }
 
