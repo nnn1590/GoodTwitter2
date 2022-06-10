@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          GoodTwitter 2 - Electric Boogaloo (DEV, FORK)
-// @version       0.0.37
-// @description   A try to make Twitter look good again
+// @version       0.0.39
+// @description   A try to make Twitter look good again.
 // @author        schwarzkatz
 // @license       MIT
 // @match         https://twitter.com/*
@@ -77,11 +77,14 @@
 
   // get kebab case (thisIsAString -> this-is-a-string)
   String.prototype.toKebab = function() {
-    let out = ""
-    for (let e of this.toString().split("")) {
-      out += e == e.toUpperCase() ? `-${e.toLowerCase()}` : e
-    }
-    return out
+    let arr = this.toString().split("")
+    return arr.map((e, i) => {
+      let add_dash = i > 0
+        && ((!isNaN(e) && isNaN(arr[i-1]))
+         || (isNaN(e) && !isNaN(arr[i-1]))
+         || (isNaN(e) && e == e.toUpperCase()))
+      return `${add_dash ? "-" : ""}${e.toLowerCase()}`
+    }).join("")
   }
 
   String.prototype.replaceAt = function(index, length, text) {
@@ -456,7 +459,7 @@
     smallSidebars: false,
     hideTrends: false,
     leftTrends: true,
-    show10Trends: false,
+    show5Trends: false,
 
     // profile
     legacyProfile: false,
@@ -611,7 +614,7 @@
           ${getSettingTogglePart("smallSidebars")}
           ${getSettingTogglePart("hideTrends")}
           ${getSettingTogglePart("leftTrends")}
-          ${getSettingTogglePart("show10Trends")}
+          ${getSettingTogglePart("show5Trends")}
           <div class="gt2-settings-separator"></div>
 
           <div class="gt2-settings-sub-header">${getLocStr("navProfile")}</div>
@@ -748,7 +751,7 @@
 
   function disableTogglesIfNeeded() {
     // other trend related toggles are not needed when the trends are disabled
-    $("div[data-setting-name=leftTrends], div[data-setting-name=show10Trends]")
+    $("div[data-setting-name=leftTrends], div[data-setting-name=show5Trends]")
     [GM_getValue("opt_gt2").hideTrends ? "addClass" : "removeClass"]("gt2-disabled")
 
     // hide font input if fontOverride is disabled
@@ -1023,71 +1026,74 @@
 
       let $profile = $(profileSel)
 
-      // information (constant)
+      // profile information
       const i = {
-        $banner:        $("a[href$='/header_photo'] img"),
-        avatarUrl:      $profile.find("a[href$='/photo'] img, a[href$='/nft'] img").first(),
-        screenName:     $profile.find("> div:nth-child(2) > div > div > div:nth-child(2) span:contains(@)").text().slice(1),
-        followsYou:     $profile.find("> div:nth-child(2) > div > div > div:nth-child(2) > div:nth-child(2)"),
-        nameHTML:       $profile.find("> div:nth-child(2) > div > div > div:nth-child(1) > div").html(),
-        joinDateHTML:   $profile.find("div[data-testid=UserProfileHeader_Items] > span:last-child").html(),
-        followingRnd:   $profile.find(`a[href$="/following"] > span:first-child, > div:not(:first-child) div:nth-child(1) > [role=button]:first-child:last-child > span:first-child`).first().text().trim(),
-        followersRnd:   $profile.find(`a[href$="/followers"] > span:first-child, > div:not(:first-child) div:nth-child(2) > [role=button]:first-child:last-child > span:first-child`).first().text().trim(),
-        screenNameOnly: false,
-        avatarHex:      $profile.find("a[href$='/nft']").length > 0
-      }
+        banner:         () => $("a[href$='/header_photo'] img"),
+        avatar:         () => $profile.find("a[href$='/photo'] img, a[href$='/nft'] img").first(),
+        screenName:     () => $profile.find("> [data-testid=UserName] > div:nth-child(1) > div [dir] > span:contains(@):not(:has(> *))").text().slice(1),
+        followsYou:     () => $profile.find("> [data-testid=UserName] > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(2)"),
+        nameHTML:       () => $profile.find("> [data-testid=UserName] > div:nth-child(1) > div > div:nth-child(1) > div").html(),
+        automated:      () => $profile.find("> [data-testid=UserName] > div:nth-child(2)"),
+        joinDateHTML:   () => $profile.find("div[data-testid=UserProfileHeader_Items] > span:last-child").html(),
+        followingRnd:   () => $profile.find(`a[href$="/following"] > span:first-child, > div:not(:first-child) div:nth-child(1) > [role=button]:first-child:last-child > span:first-child`).first().text().trim(),
+        followersRnd:   () => $profile.find(`a[href$="/followers"] > span:first-child, > div:not(:first-child) div:nth-child(2) > [role=button]:first-child:last-child > span:first-child`).first().text().trim(),
 
-      if (i.screenName == "") {
-        i.screenNameOnly = true
-        i.screenName = $(i.nameHTML).text().trim().slice(1)
+        // booleans
+        hasOnlyScreenName:  () => $profile.find("> [data-testid=UserName] > div:nth-child(1) > div > div").length == 1,
+        avatarIsHex:        () => $profile.find("a[href$='/nft']").length > 0,
+
+        // sidebar elements
+        description: () => $profile.find("div[data-testid=UserDescription]"),
+        items:       () => $profile.find("div[data-testid=UserProfileHeader_Items]"),
+        fyk:         () => $profile.find("> div:last-child:not(:nth-child(2)) > div:last-child:first-child")
       }
 
 
       if (!$(".gt2-legacy-profile-banner").length) {
         $("header").before(`
           <div class="gt2-legacy-profile-banner">
-            ${i.$banner.length ? `<img src="${i.$banner.attr("src").match(/(\S+)\/\d+x\d+/)[1]}/1500x500" />` : ""}
+            ${i.banner().length ? `<img src="${i.banner().attr("src").match(/(\S+)\/\d+x\d+/)[1]}/1500x500" />` : ""}
           </div>
           <div class="gt2-legacy-profile-nav">
             <div class="gt2-legacy-profile-nav-left">
-              <div class="gt2-legacy-profile-nav-avatar ${i.avatarHex ? "gt2-avatar-hex" : ""}">
-                <img src="${i.avatarUrl.length ? i.avatarUrl.attr("src").replace(/_(bigger|normal|(reasonably_)?small|\d*x\d+)/, "_400x400") : defaultAvatarUrl}" />
+              <div class="gt2-legacy-profile-nav-avatar ${i.avatarIsHex() ? "gt2-avatar-hex" : ""}">
+                <img src="${i.avatar().length ? i.avatar().attr("src").replace(/_(bigger|normal|(reasonably_)?small|\d*x\d+)/, "_400x400") : defaultAvatarUrl}" />
               </div>
               <div>
-                <div class="gt2-legacy-profile-name">${i.nameHTML}</div>
+                <div class="gt2-legacy-profile-name">${i.nameHTML()}</div>
                 <div class="gt2-legacy-profile-screen-name-wrap">
-                  ${i.screenNameOnly ? "" : `
+                  ${i.hasOnlyScreenName() ? "" : `
                     <div class="gt2-legacy-profile-screen-name">
-                      @<span>${i.screenName}</span>
+                      @<span>${i.screenName()}</span>
                     </div>
                   `}
-                  ${i.followsYou.length ? i.followsYou.prop("outerHTML") : ""}
+                  ${i.followsYou().length ? i.followsYou().prop("outerHTML") : ""}
                 </div>
               </div>
             </div>
             <div class="gt2-legacy-profile-nav-center">
-              <a href="/${i.screenName}" title="">
+              <a href="/${i.screenName()}" title="">
                 <div>${getLocStr("statsTweets")}</div>
                 <div>0</div>
               </a>
-              <a href="/${i.screenName}/following" title="">
+              <a href="/${i.screenName()}/following" title="">
                 <div>${getLocStr("statsFollowing")}</div>
-                <div>${i.followingRnd}</div>
+                <div>${i.followingRnd()}</div>
               </a>
-              <a href="/${i.screenName}/followers" title="">
+              <a href="/${i.screenName()}/followers" title="">
                 <div>${getLocStr("statsFollowers")}</div>
-                <div>${i.followersRnd}</div>
+                <div>${i.followersRnd()}</div>
               </a>
-              <a href="/${i.screenName}/likes" title="">
+              <a href="/${i.screenName()}/likes" title="">
                 <div>${getLocStr("statsLikes")}</div>
                 <div>0</div>
               </a>
               <!--
-                <a href="/${i.screenName}/lists" title="">
+                <a href="/${i.screenName()}/lists" title="">
                   <div>${getLocStr("navLists")}</div>
                   <div></div>
                 </a>
-                <a href="/${i.screenName}/moments" title="">
+                <a href="/${i.screenName()}/moments" title="">
                   <div>${getLocStr("statsMoments")}</div>
                   <div></div>
                 </a>
@@ -1099,7 +1105,7 @@
       }
 
       // add like and tweet count
-      requestUser(i.screenName, res => {
+      requestUser(i.screenName(), res => {
         let profileData = res.data.user
         let pleg = profileData.legacy
 
@@ -1108,7 +1114,7 @@
 
         // change stats
         for (let tmp of [
-          [i.screenName, "statuses_count"],
+          [i.screenName(), "statuses_count"],
           ["following", "friends_count"],
           ["followers", "followers_count"],
           ["likes", "favourites_count"]
@@ -1136,33 +1142,23 @@
         $(".gt2-legacy-profile-info").data("alreadyFound", false)
         waitForKeyElements(".gt2-legacy-profile-info", () => {
           if (!$(".gt2-legacy-profile-info .gt2-legacy-profile-name").length) {
-            // elements
-            let e = {
-              $description: $profile.find("div[data-testid=UserDescription]"),
-              $items:       $profile.find("div[data-testid=UserProfileHeader_Items]"),
-              $fyk:         $profile.find("> div:last-child:not(:nth-child(2)) > div:last-child:first-child")
-            }
-            i.screenName  = $profile.find("> div:nth-child(2) > div > div > div:nth-child(2) span:contains(@)").text().slice(1)
-            i.followsYou  = $profile.find("> div:nth-child(2) > div > div > div:nth-child(2) > div:nth-child(2)")
-            i.nameHTML    = $profile.find("> div:nth-child(2) > div > div > div:nth-child(1) > div").html()
-            if (i.screenName == "") {
-              i.screenNameOnly = true
-              i.screenName = $(i.nameHTML).text().trim().slice(1)
-            }
 
             $(".gt2-legacy-profile-info").append(`
-              <div class="gt2-legacy-profile-name">${i.nameHTML}</div>
+              <div class="gt2-legacy-profile-name">${i.nameHTML()}</div>
               <div class="gt2-legacy-profile-screen-name-wrap">
-                ${i.screenNameOnly ? "" : `
+                ${i.hasOnlyScreenName() ? "" : `
                   <div class="gt2-legacy-profile-screen-name">
-                    @<span>${i.screenName}</span>
+                    @<span>${i.screenName()}</span>
                   </div>
                 `}
-                ${i.followsYou.length ? i.followsYou.prop("outerHTML") : ""}
+                ${i.followsYou().length ? i.followsYou().prop("outerHTML") : ""}
               </div>
-              ${e.$description.length ? `<div class="gt2-legacy-profile-description">${e.$description.parent().html()}</div>` : ""}
-              <div class="gt2-legacy-profile-items">${e.$items.length ? e.$items.html() : ""}</div>
-              ${e.$fyk.length         ? `<div class="gt2-legacy-profile-fyk">${e.$fyk.prop("outerHTML")}</div>`               : ""}
+              ${i.automated().length ? `<div class="gt2-legacy-profile-automated">${i.automated().prop("outerHTML")}</div>` : ""}
+              ${i.description().length ? `<div class="gt2-legacy-profile-description">${i.description().parent().html()}</div>` : ""}
+              <div class="gt2-legacy-profile-items">
+                ${i.items().length ? i.items().html() : ""}
+              </div>
+              ${i.fyk().length ? `<div class="gt2-legacy-profile-fyk">${i.fyk().prop("outerHTML")}</div>` : ""}
             `)
 
             GM_setValue("hasRun_InsertFYK", false)
@@ -1185,14 +1181,13 @@
 
     // profile suspended / not found
     waitForKeyElements([
-      `body:not([data-gt2-path^="messages"]) [data-testid=emptyState] > div:nth-child(2) > *:not(a)`, // not found
-      `[data-testid=emptyState] [href="https://help.twitter.com/rules-and-policies/twitter-rules"]`   // suspended
+      `body:not([data-gt2-path^="messages"]) [data-testid=empty_state_body_text] > *:not(a):first-child:last-child`, // not found
+      `[data-testid=emptyState] [href="https://help.twitter.com/rules-and-policies/twitter-rules"]`           // suspended
     ].join(", "), () => {
       let $tmp = $(profileSel).find("> div:nth-child(2) > div > div")
       let i = {
-        screenName: $tmp.find("> div:nth-last-child(1)").text().trim().slice(1),
-        nameHTML:   $tmp.find("> div").length > 1 ? $tmp.find("> div:nth-child(1)").html() : null,
-        avatarUrl:  defaultAvatarUrl
+        screenName: () => $tmp.find("> div:nth-last-child(1)").text().trim().slice(1),
+        nameHTML:   () => $tmp.find("> div").length > 1 ? $tmp.find("> div:nth-child(1)").html() : null
       }
       $("body").addClass("gt2-profile-not-found")
       $("header").before(`
@@ -1202,33 +1197,33 @@
         <div class="gt2-legacy-profile-nav">
           <div class="gt2-legacy-profile-nav-left">
             <div class="gt2-legacy-profile-nav-avatar">
-              <img src="${i.avatarUrl}" />
+              <img src="${defaultAvatarUrl}" />
             </div>
             <div>
-              <a href="/${i.screenName}" class="gt2-legacy-profile-name">${i.nameHTML ? i.nameHTML : `@${i.screenName}`}</a>
-              ${i.nameHTML ? `
+              <a href="/${i.screenName()}" class="gt2-legacy-profile-name">${i.nameHTML() ? i.nameHTML() : `@${i.screenName()}`}</a>
+              ${i.nameHTML() ? `
                 <div class="gt2-legacy-profile-screen-name-wrap">
-                  <a href="/${i.screenName}" class="gt2-legacy-profile-screen-name">
-                  @<span>${i.screenName}</span>
+                  <a href="/${i.screenName()}" class="gt2-legacy-profile-screen-name">
+                  @<span>${i.screenName()}</span>
                   </a>
                 </div>
               ` : ""}
             </div>
           </div>
           <div class="gt2-legacy-profile-nav-center">
-            <a href="/${i.screenName}">
+            <a href="/${i.screenName()}">
               <div>${getLocStr("statsTweets")}</div>
               <div>0</div>
             </a>
-            <a href="/${i.screenName}/following">
+            <a href="/${i.screenName()}/following">
               <div>${getLocStr("statsFollowing")}</div>
               <div>0</div>
             </a>
-            <a href="/${i.screenName}/followers">
+            <a href="/${i.screenName()}/followers">
               <div>${getLocStr("statsFollowers")}</div>
               <div>0</div>
             </a>
-            <a href="/${i.screenName}/likes">
+            <a href="/${i.screenName()}/likes">
               <div>${getLocStr("statsLikes")}</div>
               <div>0</div>
             </a>
@@ -1238,11 +1233,11 @@
       `)
       waitForKeyElements(".gt2-legacy-profile-info", () => {
         $(".gt2-legacy-profile-info").append(`
-          <a href="/${i.screenName}" class="gt2-legacy-profile-name">${i.nameHTML ? i.nameHTML : `@${i.screenName}`}</a>
-          ${i.nameHTML ? `
+          <a href="/${i.screenName()}" class="gt2-legacy-profile-name">${i.nameHTML() ? i.nameHTML() : `@${i.screenName()}`}</a>
+          ${i.nameHTML() ? `
             <div class="gt2-legacy-profile-screen-name-wrap">
-              <a href="/${i.screenName}" class="gt2-legacy-profile-screen-name">
-                @<span>${i.screenName}</span>
+              <a href="/${i.screenName()}" class="gt2-legacy-profile-screen-name">
+                @<span>${i.screenName()}</span>
               </a>
             </div>
           ` : ""}
@@ -1285,19 +1280,17 @@
   }
 
 
-  // handle trends (wrap, move and show10)
+  // handle trends (hide, move, wrap)
   function handleTrends() {
     let w = window.innerWidth
-    let trends = `div[data-testid=trend]:not(.gt2-trend-wrapped),
-                  section[aria-labelledby^=accessible-list] a[href="/explore/tabs/for-you"] > div > span:not(.gt2-trend-wrapped)`
+    let trends = `section:not(.gt2-trends-handled) div[data-testid=trend]:not(.gt2-trend-wrapped),
+                  section[aria-labelledby^=accessible-list]:not(.gt2-trends-handled) a[href="/explore/tabs/for-you"] > div > span:not(.gt2-trend-wrapped)`
 
-    waitForKeyElements(trends, () => {
-
+    waitForKeyElements(trends, e => {
       // actions for the whole container
       if (!$(trends).parents("section").hasClass("gt2-trends-handled")
         && $(trends).parents("div[data-testid=sidebarColumn]").length
       ) {
-        $(trends).parents("section").addClass("gt2-trends-handled")
 
         // hide trends
         if (GM_getValue("opt_gt2").hideTrends) {
@@ -1316,16 +1309,12 @@
           .appendTo(".gt2-left-sidebar")
         }
 
-        // show 10 trends
-        if (GM_getValue("opt_gt2").show10Trends) {
-          if ($(trends).parent().parent().find("> div").length == 7) {
-            $(trends).parent().parent().find("> div[role=button]").click()
-          }
-        }
+        $(trends).parents("section").addClass("gt2-trends-handled")
       }
 
+
       // wrap trends in anchors
-      $(trends).each(function() {
+      $(e).each(function() {
         let $toWrap = $(this).find("> div > div:nth-child(2) > span [dir]")
         if ($toWrap.length) {
           $(this).addClass("gt2-trend-wrapped")
@@ -1675,13 +1664,13 @@
           sel:  `a[href='/${i.screenName}']`,
           name: "Profile"
         }, {
-          sel:  `a[href='/${i.screenName}/lists']`,
+          sel:  `a[href$='/lists']`,
           name: "Lists"
         }, {
-          sel:  `a[href='/i/bookmarks']`,
+          sel:  `a[href$='/bookmarks']`,
           name: "Bookmarks"
         }, {
-          sel:  `a[href='/i/communities']`,
+          sel:  `a[href$='/communities']`,
           name: "Communities"
         }, {
           sel:  `a[href='/explore']`,
@@ -1876,7 +1865,7 @@
     if (GM_getValue("opt_gt2").showMediaWithContentWarnings && GM_getValue("opt_gt2").showMediaWithContentWarningsSel < 7) {
       let $tweet = $(e).closest("[data-testid=tweet]")
 
-      if ($(e).closest("[aria-labelledby]").find("> div > div > div:nth-child(2)").length) {
+      if ($(e).closest("[aria-labelledby]").find("> div > div > div > div:nth-child(2)").length) {
         let id = $("body").is(".gt2-page-tweet")
           ? getPath().split("/")[2].split("?")[0].split("#")[0]
           : $tweet.find("time").parent().attr("href").split("/status/")[1]
@@ -1962,7 +1951,7 @@
 
 
   // hide timeline follow suggestions
-  if (GM_getValue("opt_gt2").hideFollowSuggestions && (GM_getValue("opt_gt2").hideFollowSuggestionsLocSel & 1) == 1) {
+  if (GM_getValue("opt_gt2").hideFollowSuggestions) {
     function hideTLFS($p) {
       if (!$p) return $p
       if ($p.prev().length) {
@@ -1970,18 +1959,13 @@
         if ($p.find("article").length) return
         $p.addClass("gt2-hidden")
       } else {
-        if (window.scrollY < 500) return
+        // if (window.scrollY < 500) return
         setTimeout(() => {
           $p = hideTLFS($p)
         }, 100)
       }
       return $p
     }
-
-    // small follow topic above tweets
-    // if ((GM_getValue("opt_gt2").hideFollowSuggestionsSel & 1) == 1) {
-    //   waitForKeyElements(`[data-gt2-path=home] [data-testid=primaryColumn] section article > div > div > div > div:not([data-testid=tweet]) > div > div > div`, e => $(e).addClass("gt2-hidden"))
-    // }
 
     // big follow boxes
     waitForKeyElements(
@@ -1990,9 +1974,8 @@
       .map(e => `[data-testid=primaryColumn] section [href^="/i/${e}"]`)
       .join(", "), e => {
 
-      let $p = $(e).parent().parent().addClass("gt2-hidden")
-      if ($p.next().length) $p.next().addClass("gt2-hidden")
-      if ($p.next().next().find("div > div:empty").length) $p.next().next().addClass("gt2-hidden")
+      let $p = $(e).parents("[data-testid=cellInnerDiv]").addClass("gt2-hidden")
+      if ($p.next().find("div > div:empty").length) $p.next().addClass("gt2-hidden")
       for (let i=0; i < 6; i++) {
         $p = hideTLFS($p)
       }
@@ -2011,8 +1994,8 @@
   })
 
   // do not add dividers to tweet inline threads
-  waitForKeyElements(`[style*="position: absolute"] > div > div > a[href^="/i/status/"],
-                      [style*="position: absolute"] > div > div > article`, e => $(e).parents(`[style*="position: absolute"]`).children().attr("data-gt2-divider-add-ignore", ""))
+  waitForKeyElements(`[data-testid=cellInnerDiv] article,
+                      [data-testid=cellInnerDiv] a[href^="/i/status/"]`, e => $(e).parents(`[data-testid=cellInnerDiv]`).children().attr("data-gt2-divider-add-ignore", ""))
 
   // color notifications bell
   waitForKeyElements(`path[d^="M23.61.15c-.375"]`, e => $(e).parents("[role=button]").attr("data-gt2-bell-full-color", ""))
@@ -2310,10 +2293,10 @@
     return top.some(e => e == path.split("/")[0])
   }
   function _onSubPage(path, top, sub) {
-    return (top == null ? true : _onPage(path, top)) && path.includes("/") && sub.some(e => e == path.split("/")[1])
+    return (top == null ? true : _onPage(path, top)) && path.includes("/") && sub.some(e => e == (e.includes("/") ? path.split("/").slice(1).join("/") : path.split("/")[1]))
   }
   function _isModal(path) {
-    return _onSubPage(path, "i", ["display", "keyboard_shortcuts", "flow"])
+    return _onSubPage(path, "i", ["display", "keyboard_shortcuts", "flow", "lists/add_member"])
         || _onSubPage(path, "settings", ["trends", "profile"])
         || _onSubPage(path, "compose", ["tweet"])
         || _onSubPage(path, "account", ["add", "switch"])
