@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name          GoodTwitter 2 - Electric Boogaloo (DEV, FORK)
-// @version       0.0.39
+// @version       0.0.40
 // @description   A try to make Twitter look good again.
 // @author        schwarzkatz
 // @license       MIT
 // @match         https://twitter.com/*
+// @match         https://mobile.twitter.com/*
 // @exclude       https://twitter.com/i/cards/*
 // @exclude       https://twitter.com/i/moments/edit/*
 // @exclude       https://twitter.com/i/directory/*
@@ -38,6 +39,13 @@
   // do not execute on these pages
   if (getPath().match(/^login(\?.*)?$/) || (!isLoggedIn() && getPath().match(/^(\?.*)?$/))) {
     return
+  }
+
+  // redirect for mobile urls
+  if (window.location.host == "mobile.twitter.com") {
+    if (GM_getValue("opt_gt2").mobileRedirect) {
+      window.location.href = window.location.href.replace("//mobile.twitter.com", "//twitter.com")
+    } else return
   }
 
 
@@ -467,6 +475,7 @@
     disableHexagonAvatars: false,
     enableQuickBlock: false,
     leftMedia: false,
+    profileMediaRedirect: false,
 
     // global look
     hideFollowSuggestions: false,
@@ -484,6 +493,7 @@
     // other
     updateNotifications: true,
     expandTcoShortlinks: true,
+    mobileRedirect: true,
   }
 
   // set default options
@@ -623,6 +633,7 @@
           ${getSettingTogglePart("disableHexagonAvatars")}
           ${getSettingTogglePart("enableQuickBlock")}
           ${getSettingTogglePart("leftMedia")}
+          ${getSettingTogglePart("profileMediaRedirect")}
           <div class="gt2-settings-separator"></div>
 
           <div class="gt2-settings-sub-header">${getLocStr("settingsHeaderGlobalLook")}</div>
@@ -672,6 +683,7 @@
           <div class="gt2-settings-sub-header">${getLocStr("settingsHeaderOther")}</div>
           ${getSettingTogglePart("updateNotifications")}
           ${getSettingTogglePart("expandTcoShortlinks")}
+          ${getSettingTogglePart("mobileRedirect")}
         </div>
       `
       let $s = $("main section[aria-labelledby=detail-header]")
@@ -2296,7 +2308,7 @@
     return (top == null ? true : _onPage(path, top)) && path.includes("/") && sub.some(e => e == (e.includes("/") ? path.split("/").slice(1).join("/") : path.split("/")[1]))
   }
   function _isModal(path) {
-    return _onSubPage(path, "i", ["display", "keyboard_shortcuts", "flow", "lists/add_member"])
+    return _onSubPage(path, "i", ["display", "keyboard_shortcuts", "flow", "lists/add_member", "report"])
         || _onSubPage(path, "settings", ["trends", "profile"])
         || _onSubPage(path, "compose", ["tweet"])
         || _onSubPage(path, "account", ["add", "switch"])
@@ -2414,7 +2426,7 @@
 
 
     // tweet
-    if (onSubPage(null, ["status"])) {
+    if (onSubPage(null, ["status"]) || path().startsWith("i/web/status/")) {
       $("body").addClass("gt2-page-tweet")
       // scroll up on load
       waitForKeyElements("[data-testid=tweet] [href$=source-labels]", () =>  window.scroll(0, window.pageYOffset - 75))
@@ -2439,7 +2451,6 @@
       if (!(onPage("", "explore", "home", "hashtag", "i", "messages", "notifications", "places", "search", "settings", "404")
             || onSubPage(null, ["communities", "followers", "followers_you_follow", "following", "lists", "moments", "status", "topics"]))
           || onSubPage("intent", ["user"])) {
-
         $("body").addClass("gt2-page-profile").removeClass("gt2-profile-not-found gt2-page-profile-youre-blocked")
         $("[class^=gt2-blocked-profile-]").remove()
         $(".gt2-tco-expanded").removeClass("gt2-tco-expanded")
@@ -2466,6 +2477,14 @@
           }
           rebuildLegacyProfile()
         }
+
+        // redirect to /media on profiles (without /intent)
+        if (GM_getValue("opt_gt2").profileMediaRedirect && path().split("/").length == 1 && (!document.body.dataset.hasOwnProperty("gt2PrevPath") || document.body.dataset.gt2PrevPath.split("/")[0] != path().split("/")[0])) {
+          waitForKeyElements(`[href$="/media"][aria-selected=false]`, e => e[0].click())
+          console.log("redirecting to /media")
+        }
+
+        // move left media
         if (GM_getValue("opt_gt2").leftMedia
           && ((!GM_getValue("opt_gt2").smallSidebars && window.innerWidth > 1350)
             || (GM_getValue("opt_gt2").smallSidebars && window.innerWidth > 1230))) {
@@ -2477,8 +2496,8 @@
             $mediaContainer.detach().addClass("gt2-profile-media")
             .appendTo(".gt2-left-sidebar")
           })
-
         }
+
       } else {
         $("body").removeClass("gt2-page-profile")
         $(`.gt2-legacy-profile-banner,
@@ -2556,5 +2575,14 @@
     beforeUrlChange(getPath())
     urlChange("pop", getPath())
   })
+
+
+  // remove "t" search parameter (probably used for tracking?)
+  // https://twitter.com/Outrojules/status/1543220843995619328?s=20&t=fCFEatQ_iAtlyiHQCWCxoQ
+  let _selectNodeContents = Range.prototype.selectNodeContents
+  Range.prototype.selectNodeContents = function() {
+    arguments[0].textContent = arguments[0].textContent.replace(/&t=.*$/, "")
+    _selectNodeContents.apply(this, arguments)
+  }
 
 })(jQuery, waitForKeyElements)
