@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          GoodTwitter 2 - Electric Boogaloo (DEV, FORK)
-// @version       0.0.40
+// @version       0.0.40.6
 // @description   A try to make Twitter look good again.
 // @author        schwarzkatz
 // @license       MIT
@@ -821,20 +821,44 @@
       `)
 
       // home, notifications, messages
-      for (let e of [
+      for (let type of [
         "Home",
         "Notifications",
         "Messages",
         window.innerWidth < 1005 ? "Explore" : null
       ]) {
-        if (!e) continue
-        let $e = $(`nav > a[href^="/${e.toLowerCase()}"]:not([data-testid=AppTabBar_Profile_Link]):not([href$="/lists"])`)
-        if (!e.length) continue
-        $e.appendTo(".gt2-nav-left")
-        $(`.gt2-nav a[href^="/${e.toLowerCase()}"] > div`)
+        if (!type) continue
+        let origElemSel = `nav > a[href^="/${type.toLowerCase()}"]:not([data-testid=AppTabBar_Profile_Link]):not([href$="/lists"])`
+        let $e = document.querySelector(origElemSel)
+        if (!$e) continue
+        document.querySelector(".gt2-nav-left").insertAdjacentHTML("beforeend", $e.outerHTML)
+
+        document.querySelectorAll(`.gt2-nav-left [data-testid]`)
+          .forEach(e => {
+            e.addEventListener("click", event => {
+              event.preventDefault()
+              let testid = event.target.closest("[data-testid]").dataset.testid
+              document.querySelector(`nav [data-testid=${testid}]`).click()
+            })
+          })
+
+        watchForChanges(origElemSel, e => {
+          let navbarElem = document.querySelector(`.gt2-nav-left [data-testid=${e.dataset.testid}]`)
+          if (!navbarElem) return
+          navbarElem.innerHTML = e.innerHTML
+          navbarElem.firstElementChild.setAttribute("data-gt2-color-override-ignore", "")
+          navbarElem.firstElementChild.insertAdjacentHTML("beforeend", `
+            <div class="gt2-nav-header">
+              ${getLocStr(`nav${type}`)}
+            </div>
+          `)
+        })
+
+        // $e.appendTo(".gt2-nav-left")
+        $(`.gt2-nav a[href^="/${type.toLowerCase()}"] > div`)
         .append(`
           <div class="gt2-nav-header">
-            ${getLocStr(`nav${e}`)}
+            ${getLocStr(`nav${type}`)}
           </div>
         `)
         .attr("data-gt2-color-override-ignore", "")
@@ -846,6 +870,21 @@
       // twitter logo
       $("h1 a[href='/home'] svg")
       .appendTo(".gt2-nav-center a")
+    })
+  }
+
+  function watchForChanges(selector, callback) {
+    waitForKeyElements(selector, $element => {
+      let element = $element[0]
+      if (element) {
+        new MutationObserver(mut => {
+          mut.forEach(() => callback(element))
+        }).observe(element, {
+          attributes: true,
+          subtree: true,
+          childList: true
+        })
+      }
     })
   }
 
@@ -1015,13 +1054,13 @@
 
   // recreate the legacy profile layout
   function rebuildLegacyProfile() {
-    let currentScreenName = getPath().match(/^intent\/user/)
+    let currentScreenName = getPath().match(/^intent\/(user|follow)/)
       ? getPath().match(/screen_name=(\w+)/)[1]
       : getPath().split("/")[0].split("?")[0].split("#")[0]
     console.log(`rebuild: ${currentScreenName}`)
 
 
-    let profileSel = "div[data-testid=primaryColumn] > div > div:nth-child(2) > div > div > div:nth-child(1) > div:nth-child(2)"
+    let profileSel = "div[data-testid=primaryColumn] > div > div:nth-last-child(1) > div > div > div:nth-child(1) > div:nth-child(2)"
 
     waitForKeyElements([
       `a[href="/${currentScreenName}/photo" i] img`,
@@ -1090,11 +1129,11 @@
               </a>
               <a href="/${i.screenName()}/following" title="">
                 <div>${getLocStr("statsFollowing")}</div>
-                <div>${i.followingRnd()}</div>
+                <div>${i.followingRnd() || 0}</div>
               </a>
               <a href="/${i.screenName()}/followers" title="">
                 <div>${getLocStr("statsFollowers")}</div>
-                <div>${i.followersRnd()}</div>
+                <div>${i.followersRnd() || 0}</div>
               </a>
               <a href="/${i.screenName()}/likes" title="">
                 <div>${getLocStr("statsLikes")}</div>
@@ -1147,7 +1186,7 @@
 
       // sidebar profile information
       waitForKeyElements(`[href="/${
-        getPath().match(/^intent\/user/)
+        getPath().match(/^intent\/(user|follow)/)
           ? getPath().match(/screen_name=(\w+)/)[1]
           : getPath().split("/")[0].split("?")[0].split("#")[0]
         }/following" i]`, () => {
@@ -1261,13 +1300,13 @@
 
   // force latest tweets view.
   function forceLatest() {
-    let sparkOptToggle  = "div[data-testid=primaryColumn] > div > div:nth-child(1) > div:nth-child(1) > div > div > div > div > div:nth-child(2) div[aria-haspopup]"
-    let sparkOpt        = "#react-root h2 + div > div:nth-child(2) > div > div > div > div:nth-child(2) > div:nth-child(3)"
+    let sparkOptToggle  = `[d*="M22.772 10.506l-5.618-2.192"]`
+    let sparkOpt        = "#layers [data-testid=Dropdown]"
 
     GM_setValue("hasRun_forceLatest", false)
     waitForKeyElements(sparkOptToggle, () => {
       if (!GM_getValue("hasRun_forceLatest")) {
-        $(sparkOptToggle).click()
+        $(sparkOptToggle).closest("[aria-haspopup]").click()
         $("body").addClass("gt2-hide-spark-opt")
       }
 
@@ -1277,7 +1316,7 @@
           if ($(sparkOpt).find("> div:nth-child(1) path").length == 3) {
             $(sparkOpt).children().eq(1).click()
           } else {
-            $(sparkOptToggle).click()
+            $(sparkOptToggle).closest("[aria-haspopup]").click()
           }
           $("body").removeClass("gt2-hide-spark-opt")
 
@@ -2292,7 +2331,7 @@
     path = path.split("?")[0].split("#")[0]
     // [LPL] reattach buttons to original position
     if (!_isModal(path)) {
-      let $b = $("div[data-testid=primaryColumn] > div > div:nth-child(2) > div > div > div:nth-child(1) > div:nth-child(2) > div:nth-child(1)")
+      let $b = $("div[data-testid=primaryColumn] > div > div:nth-last-child(1) > div > div > div:nth-child(1) > div:nth-child(2) > div:nth-child(1)")
       if (!$b.find("> div:last-child:not(:first-child)").length && $("body").attr("data-gt2-prev-path") != path) {
         $(".gt2-legacy-profile-nav-right > div").appendTo($b)
       }
@@ -2447,10 +2486,10 @@
 
 
     // assume profile page
-    if (!isModal || onSubPage("intent", ["user"])) {
+    if (!isModal || onSubPage("intent", ["user", "follow"])) {
       if (!(onPage("", "explore", "home", "hashtag", "i", "messages", "notifications", "places", "search", "settings", "404")
             || onSubPage(null, ["communities", "followers", "followers_you_follow", "following", "lists", "moments", "status", "topics"]))
-          || onSubPage("intent", ["user"])) {
+          || onSubPage("intent", ["user", "follow"])) {
         $("body").addClass("gt2-page-profile").removeClass("gt2-profile-not-found gt2-page-profile-youre-blocked")
         $("[class^=gt2-blocked-profile-]").remove()
         $(".gt2-tco-expanded").removeClass("gt2-tco-expanded")
