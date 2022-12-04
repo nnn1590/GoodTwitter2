@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.0.42](https://github.com/Bl4Cc4t/GoodTwitter2/pull/506)
+*released 2022-12-04*
+
+#### New
+- re-added tweet source label ([#505](https://github.com/Bl4Cc4t/GoodTwitter2/issues/505))
+
+#### Changes
+- updated Spanish translation (thanks [@gaelcoral](https://github.com/gaelcoral)!)
+
+
+## [0.0.41.1](https://github.com/Bl4Cc4t/GoodTwitter2/pull/499)
+*released 2022-11-22*
+
+#### Changes
+- updated French translation (thanks [@Cypral](https://github.com/Cypral)!)
+- fixed verification reason & legacy profile layout issues ([#497](https://github.com/Bl4Cc4t/GoodTwitter2/issues/497))
+
+
+## [0.0.41](https://github.com/Bl4Cc4t/GoodTwitter2/pull/496)
+*released 2022-11-20*
+
+#### New
+- Bulgarian translation (thanks [@EdinUser](https://github.com/EdinUser)!, [#487](https://github.com/Bl4Cc4t/GoodTwitter2/issues/487))
+
+#### Changes
+- updated Vietnamese translation (thanks [@touanu](https://github.com/touanu)!)
+- fixed verification reason not showing up ([#492](https://github.com/Bl4Cc4t/GoodTwitter2/issues/492))
+- fixed some other styling issues
+
+
 ## [0.0.40.7](https://github.com/Bl4Cc4t/GoodTwitter2/pull/486)
 *released 2022-10-02*
 

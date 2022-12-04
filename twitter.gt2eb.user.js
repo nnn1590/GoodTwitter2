@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          GoodTwitter 2 - Electric Boogaloo (DEV, FORK)
-// @version       0.0.40.7
+// @version       0.0.42
 // @description   A try to make Twitter look good again.
 // @author        schwarzkatz
 // @license       MIT
@@ -1077,28 +1077,26 @@
       }
 
 
-      let $profile = $(profileSel)
-
       // profile information
       const i = {
         banner:         () => $("a[href$='/header_photo'] img"),
-        avatar:         () => $profile.find("a[href$='/photo'] img, a[href$='/nft'] img").first(),
-        screenName:     () => $profile.find("> [data-testid=UserName] > div:nth-child(1) > div [dir] > span:contains(@):not(:has(> *))").text().slice(1),
-        followsYou:     () => $profile.find("> [data-testid=UserName] > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(2)"),
-        nameHTML:       () => $profile.find("> [data-testid=UserName] > div:nth-child(1) > div > div:nth-child(1) > div").html(),
-        automated:      () => $profile.find("> [data-testid=UserName] > div:nth-child(2)"),
-        joinDateHTML:   () => $profile.find("div[data-testid=UserProfileHeader_Items] > span:last-child").html(),
-        followingRnd:   () => $profile.find(`a[href$="/following"] > span:first-child, > div:not(:first-child) div:nth-child(1) > [role=button]:first-child:last-child > span:first-child`).first().text().trim(),
-        followersRnd:   () => $profile.find(`a[href$="/followers"] > span:first-child, > div:not(:first-child) div:nth-child(2) > [role=button]:first-child:last-child > span:first-child`).first().text().trim(),
+        avatar:         () => $(profileSel).find("a[href$='/photo'] img, a[href$='/nft'] img").first(),
+        screenName:     () => $(profileSel).find("> [data-testid=UserName] > div:nth-child(1) > div [dir] > span:contains(@):not(:has(> *))").text().slice(1),
+        followsYou:     () => $(profileSel).find("> [data-testid=UserName] > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(2)"),
+        name:       () => $(profileSel).find("> [data-testid=UserName] > div:nth-child(1) > div > div:nth-child(1) > div"),
+        automated:      () => $(profileSel).find("> [data-testid=UserName] > div:nth-child(2)"),
+        joinDateHTML:   () => $(profileSel).find("div[data-testid=UserProfileHeader_Items] > span:last-child").html(),
+        followingRnd:   () => $(profileSel).find(`a[href$="/following"] > span:first-child, > div:not(:first-child) div:nth-child(1) > [role=button]:first-child:last-child > span:first-child`).first().text().trim(),
+        followersRnd:   () => $(profileSel).find(`a[href$="/followers"] > span:first-child, > div:not(:first-child) div:nth-child(2) > [role=button]:first-child:last-child > span:first-child`).first().text().trim(),
 
         // booleans
-        hasOnlyScreenName:  () => $profile.find("> [data-testid=UserName] > div:nth-child(1) > div > div").length == 1,
-        avatarIsHex:        () => $profile.find("a[href$='/nft']").length > 0,
+        hasOnlyScreenName:  () => $(profileSel).find("> [data-testid=UserName] > div:nth-child(1) > div > div").length == 1,
+        avatarIsHex:        () => $(profileSel).find("a[href$='/nft']").length > 0,
 
         // sidebar elements
-        description: () => $profile.find("div[data-testid=UserDescription]"),
-        items:       () => $profile.find("div[data-testid=UserProfileHeader_Items]"),
-        fyk:         () => $profile.find("> div:last-child:not(:nth-child(2)) > div:last-child:first-child")
+        description: () => $(profileSel).find("div[data-testid=UserDescription]"),
+        items:       () => $(profileSel).find("div[data-testid=UserProfileHeader_Items]"),
+        fyk:         () => $(profileSel).find("> div:last-child:not(:nth-child(2)) > div:last-child:first-child")
       }
 
 
@@ -1113,7 +1111,7 @@
                 <img src="${i.avatar().length ? i.avatar().attr("src").replace(/_(bigger|normal|(reasonably_)?small|\d*x\d+)/, "_400x400") : defaultAvatarUrl}" />
               </div>
               <div>
-                <div class="gt2-legacy-profile-name">${i.nameHTML()}</div>
+                <div class="gt2-legacy-profile-name">${i.name().html()}</div>
                 <div class="gt2-legacy-profile-screen-name-wrap">
                   ${i.hasOnlyScreenName() ? "" : `
                     <div class="gt2-legacy-profile-screen-name">
@@ -1194,10 +1192,9 @@
         }/following" i]`, () => {
         $(".gt2-legacy-profile-info").data("alreadyFound", false)
         waitForKeyElements(".gt2-legacy-profile-info", () => {
-          if (!$(".gt2-legacy-profile-info .gt2-legacy-profile-name").length) {
-
+          if (!$(".gt2-legacy-profile-info .gt2-legacy-profile-screen-name").length) {
             $(".gt2-legacy-profile-info").append(`
-              <div class="gt2-legacy-profile-name">${i.nameHTML()}</div>
+              <div class="gt2-legacy-profile-name"></div>
               <div class="gt2-legacy-profile-screen-name-wrap">
                 ${i.hasOnlyScreenName() ? "" : `
                   <div class="gt2-legacy-profile-screen-name">
@@ -1214,6 +1211,41 @@
               ${i.fyk().length ? `<div class="gt2-legacy-profile-fyk">${i.fyk().prop("outerHTML")}</div>` : ""}
             `)
 
+            document.querySelector(".gt2-legacy-profile-info .gt2-legacy-profile-name")
+              .insertAdjacentHTML("afterbegin", i.name()[0].innerHTML)
+
+              document.querySelector(`.gt2-legacy-profile-info .gt2-legacy-profile-name [d^="M22.25 12c0-1.43-.88"]`)
+                ?.parentElement?.parentElement?.parentElement
+                ?.addEventListener("click", e => {
+                  document.querySelector(`${profileSel} [d^="M22.25 12c0-1.43-.88"]`)
+                    ?.parentElement?.parentElement?.parentElement?.dispatchEvent(new MouseEvent("click", {bubbles: true}))
+
+                  // calculate position of the box
+                  waitForKeyElements(`#layers > div:nth-child(2) > div > div > div:nth-child(2)`, $floatingBox => {
+                    let floatingBox = $floatingBox[0]
+                    let boxBcr = floatingBox.getBoundingClientRect()
+                    let buttonBcr = e.target.getBoundingClientRect()
+
+                    const pad = 20
+                    let left = Math.max(pad, (buttonBcr.left + buttonBcr.width / 2 - boxBcr.width / 2))
+                    let leftMax = innerWidth - pad
+                    let topBoxBelow = buttonBcr.bottom + 10
+                    let topBoxAbove = Math.max(pad, buttonBcr.top - 10 - boxBcr.height)
+                    let topBoxBelowMax = innerHeight - pad
+
+                    document.querySelector(".gt2-style-verification")?.remove()
+                    document.head.insertAdjacentHTML("beforebegin", `
+                      <style class="gt2-style-verification">
+                        #layers > div:nth-child(2) > div > div > div:nth-child(2) {
+                          left: ${Math.round((left + boxBcr.width < leftMax) ? left : leftMax)}px !important;
+                          top: ${Math.round((topBoxBelow + boxBcr.height < topBoxBelowMax) ? topBoxBelow : topBoxAbove)}px !important;
+                          position: fixed !important;
+                        }
+                      </style>
+                    `)
+                  })
+                })
+
             GM_setValue("hasRun_InsertFYK", false)
             waitForKeyElements(`a[href$="/followers_you_follow"] div[style*=background-image] + img`, e => {
               if (!GM_getValue("hasRun_InsertFYK")) {
@@ -1227,7 +1259,7 @@
 
       // buttons
       if (!$(".gt2-legacy-profile-nav-right > div").length) {
-        $profile.find("> div:nth-child(1) > div:last-child").detach().appendTo(".gt2-legacy-profile-nav-right")
+        $(profileSel).find("> div:nth-child(1) > div:last-child").detach().appendTo(".gt2-legacy-profile-nav-right")
       }
 
     })
@@ -1302,7 +1334,7 @@
 
   // force latest tweets view.
   function forceLatest() {
-    let sparkOptToggle  = `[d*="M22.772 10.506l-5.618-2.192"]`
+    let sparkOptToggle  = `[d*="M2 4c1.66 0 3-1.34 3-3h1c0"]`
     let sparkOpt        = "#layers [data-testid=Dropdown]"
 
     GM_setValue("hasRun_forceLatest", false)
@@ -1772,10 +1804,14 @@
 
 
   // remove class on next click
-  $("body").on("click", ":not(.gt2-toggle-acc-switcher-dropdown), :not(div[data-testid=SideNav_AccountSwitcher_Button])", function() {
+  $("body").on("click", `:not(.gt2-toggle-acc-switcher-dropdown):not(div[data-testid=SideNav_AccountSwitcher_Button])`, function(e) {
+    if (e.target.closest(`[d^="M22.25 12c0-1.43-.88"]`))
+      return
+
     setTimeout(function () {
       if (!$("a[href='/i/flow/login']").length) {
         $("body").removeClass("gt2-acc-switcher-active")
+        document.querySelector(".gt2-style-verification")?.remove()
       }
     }, 2000)
   })
@@ -2479,6 +2515,18 @@
       $("body").addClass("gt2-page-tweet")
       // scroll up on load
       waitForKeyElements("[data-testid=tweet] [href$=source-labels]", () =>  window.scroll(0, window.pageYOffset - 75))
+
+      // add source
+      let m = location.pathname.match(/\/status\/(\d+)/)
+      if (m) {
+        requestTweet(m[1], res => {
+          if (!res.source)
+            return
+          waitForKeyElements(`[href*="${m[1]}"] time`, e => {
+            e[0].parentElement.insertAdjacentHTML("afterend", `<span class="gt2-tweet-source">${res.source}</span>`)
+          })
+        })
+      }
     } else if (!isModal) {
       $("body").removeClass("gt2-page-tweet")
     }
