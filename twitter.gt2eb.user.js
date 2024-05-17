@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          GoodTwitter 2 - Electric Boogaloo (DEV, FORK)
-// @version       0.0.43.1
+// @version       0.0.44.1
 // @description   A try to make Twitter look good again.
 // @author        schwarzkatz
 // @license       MIT
@@ -108,25 +108,59 @@
 
 
   // get account information
+  let info = null
   function getInfo() {
-    let sel = "#react-root ~ script"
-    let infoScript = $(sel).text()
-    function x(reg, defaultVal="") {
-      let m = infoScript.match(reg)
-      return m ? m[1] : defaultVal
+    if (info)
+      return info
+
+    let user = null
+    try {
+      for (let e of Array.from(document.querySelectorAll("#react-root ~ script"))) {
+        if (e.textContent.includes("__INITIAL_STATE__")) {
+          let match = e.textContent.match(/__INITIAL_STATE__=(\{.*?\});window/)
+          if (match) {
+            let initialState = JSON.parse(match[1])
+            user = Object.values(initialState?.entities?.users?.entities)[0] ?? null
+          }
+          break
+        }
+      }
+    } catch (e) {
+      console.error(e)
     }
-    return {
-      bannerUrl:  x(/profile_banner_url\":\"(.+?)\",/),
-      avatarUrl:  x(/profile_image_url_https\":\"(.+?)\",/, defaultAvatarUrl),
-      screenName: x(/screen_name\":\"(.+?)\",/, "youarenotloggedin"),
-      name:       x(/(?:true|false),\"name\":\"(.+?)\",/, x(/screen_name\":\"(.+?)\",/, "Anonymous")),
-      id:         x(/id_str\":\"(\d+)\"/, "0"),
-      stats: {
-        tweets:    parseInt(x(/statuses_count\":(\d+),/, "0")),
-        followers: parseInt(x(/\"followers_count\":(\d+),/, "0")),
-        following: parseInt(x(/friends_count\":(\d+),/, "0")),
+
+
+    if (user) {
+      info = {
+        bannerUrl: user.profile_banner_url,
+        avatarUrl: user.profile_image_url_https,
+        screenName: user.screen_name,
+        name: user.name,
+        id: user.id_str,
+        stats: {
+          tweets: user.statuses_count,
+          followers: user.followers_count,
+          following: user.friends_count
+        }
+      }
+      console.log("user info", info)
+    } else {
+      console.error("match of __INITIAL_STATE__ unsuccessful, falling back to default values")
+      info = {
+        bannerUrl: "",
+        avatarUrl: defaultAvatarUrl,
+        screenName: "youarenotloggedin",
+        name: "Anonymous",
+        id: "0",
+        stats: {
+          tweets: 0,
+          followers: 0,
+          following: 0
+        }
       }
     }
+
+    return info
   }
 
 
@@ -490,6 +524,7 @@
     hideMessageBox: true,
     rosettaIcons: false,
     favoriteLikes: false,
+    birdIcon: true,
 
     // other
     updateNotifications: true,
@@ -680,6 +715,7 @@
           ${getSettingTogglePart("hideMessageBox")}
           ${getSettingTogglePart("rosettaIcons")}
           ${getSettingTogglePart("favoriteLikes")}
+          ${getSettingTogglePart("birdIcon")}
           <div class="gt2-settings-separator"></div>
 
           <div class="gt2-settings-sub-header">${getLocStr("settingsHeaderOther")}</div>
@@ -1216,11 +1252,10 @@
             document.querySelector(".gt2-legacy-profile-info .gt2-legacy-profile-name")
               .insertAdjacentHTML("afterbegin", i.name()[0].innerHTML)
 
-              document.querySelector(`.gt2-legacy-profile-info .gt2-legacy-profile-name [d^="M22.25 12c0-1.43-.88"]`)
-                ?.parentElement?.parentElement?.parentElement
-                ?.addEventListener("click", e => {
-                  document.querySelector(`${profileSel} [d^="M22.25 12c0-1.43-.88"]`)
-                    ?.parentElement?.parentElement?.parentElement?.dispatchEvent(new MouseEvent("click", {bubbles: true}))
+              document.querySelector(`.gt2-legacy-profile-info .gt2-legacy-profile-name [data-testid=icon-verified]`)
+                ?.parentElement?.addEventListener("click", e => {
+                  document.querySelector(`${profileSel} [data-testid=icon-verified]`)
+                    ?.dispatchEvent(new MouseEvent("click", {bubbles: true}))
 
                   // calculate position of the box
                   waitForKeyElements(`#layers > div:nth-child(2) > div > div > div:nth-child(2)`, $floatingBox => {
@@ -1336,7 +1371,7 @@
 
   // force latest tweets view.
   function forceLatest() {
-    waitForKeyElements(`[data-gt2-path=home]:not([data-switched-to-latest]) [data-testid=ScrollSnap-List] > div:nth-child(2) > [aria-selected=false]`, e => {
+    waitForKeyElements(`body:not([data-switched-to-latest]) [data-testid=ScrollSnap-List] > div:nth-child(2) > [href="/home"][aria-selected=false]`, e => {
       e[0].click()
       document.body.setAttribute("data-switched-to-latest", "")
     })
@@ -2007,7 +2042,7 @@
   new MutationObserver(mut => {
     mut.forEach(m => {
       let fs = m.target[m.attributeName]["font-size"]
-      let fsOld = m.oldValue.match(/font-size: (\d+px);/)
+      let fsOld = m.oldValue?.match(/font-size: (\d+px);/)
       if (fsOld && fs != "" && fs != fsOld[1]) {
         GM_setValue("opt_display_fontSize", fs)
         updateCSS()
@@ -2646,7 +2681,7 @@
 
   const origPush = exportFunc(pageHistory.pushState, pageWindow)
   pageHistory.pushState = exportFunc(function () {
-    let path = arguments[2].slice(1)
+    let path = arguments.length > 2 ? arguments[2].slice(1) : "???"
     beforeUrlChange(path)
     origPush.apply(this, arguments)
     urlChange("push", path)
@@ -2654,7 +2689,7 @@
 
   const origRepl = exportFunc(pageHistory.replaceState, pageWindow)
   pageHistory.replaceState = exportFunc(function () {
-    let path = arguments[2].slice(1)
+    let path = arguments.length > 2 ? arguments[2].slice(1) : "???"
     beforeUrlChange(path)
     origRepl.apply(this, arguments)
     urlChange("replace", path)

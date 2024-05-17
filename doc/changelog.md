@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.0.44.1](https://github.com/Bl4Cc4t/GoodTwitter2/pull/536)
+*released 2023-04-06*
+
+#### Changes
+- reverted @run directive change causing various things to break ([#537](https://github.com/Bl4Cc4t/GoodTwitter2/issues/537), [#539](https://github.com/Bl4Cc4t/GoodTwitter2/issues/539), [#540](https://github.com/Bl4Cc4t/GoodTwitter2/issues/540), [#541](https://github.com/Bl4Cc4t/GoodTwitter2/issues/541)
+- fixed issues with twitter bird icon not showing up on Chrome ([#538](https://github.com/Bl4Cc4t/GoodTwitter2/issues/538)
+- ... and turned it into a toggle (find it under "Global look")
+
+
+## [0.0.44](https://github.com/Bl4Cc4t/GoodTwitter2/pull/536)
+*released 2023-04-04*
+
+#### New
+- replaced doge logo (???) with twitter logo
+
+#### Changes
+- fixed username showing up twice in the small profile view
+- translations updated
+
+
+## [0.0.43.2](https://github.com/Bl4Cc4t/GoodTwitter2/pull/529)
+*released 2023-01-24*
+
+#### Changes
+- bug fixes
+- translations updated
+
+
 ## [0.0.43.1](https://github.com/Bl4Cc4t/GoodTwitter2/pull/522)
 *released 2023-01-20*
 
